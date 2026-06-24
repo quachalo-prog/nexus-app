@@ -1,0 +1,28 @@
+{
+  "name": "NEXUS — IA Autonome de Projets",
+  "short_name": "NEXUS",
+  "description": "IA autonome de génération et d'analyse de projets innovants",
+  "start_url": "./NEXUS-v3.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#080C18",
+  "theme_color": "#080C18",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='115' fill='url(%23g)'/><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%237B2FFF'/><stop offset='1' stop-color='%2300D4FF'/></linearGradient></defs><text font-size='260' font-family='system-ui,sans-serif' font-weight='700' fill='white' x='256' y='256' text-anchor='middle' dominant-baseline='middle'>NX</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business"],
+  "shortcuts": [
+    {
+      "name": "Lancer une analyse",
+      "short_name": "Analyser",
+      "description": "Lancer NEXUS en mode autonome",
+      "url": "./NEXUS-v3.html#auto"
+    }
+  ]
+}

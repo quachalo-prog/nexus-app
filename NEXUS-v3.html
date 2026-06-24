@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NEXUS v3 — IA Autonome de Projets</title>
+
+<!-- ═══ PWA — Application installable sur Android ═══ -->
+<meta name="application-name" content="NEXUS">
+<meta name="description" content="IA autonome de génération et d'analyse de projets">
+<meta name="theme-color" content="#080C18">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NEXUS">
+<link rel="manifest" href="nexus-manifest.json">
+<!-- Icône générée en SVG inline via data URI -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='url(%23g)'/><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%237B2FFF'/><stop offset='1' stop-color='%2300D4FF'/></linearGradient></defs><text y='.9em' font-size='55' font-family='system-ui,sans-serif' font-weight='700' fill='white' x='50' text-anchor='middle' dominant-baseline='middle' dy='5'>NX</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!--
+╔══════════════════════════════════════════════════════════════════════════╗
+║              NEXUS v2 AUTONOME — GUIDE RAPIDE DÉBUTANT                      ║
+║                                                                            ║
+║  NOUVEAUTÉ v2 : Mode AUTONOME. L'IA choisit elle-même un secteur          ║
+║  porteur, l'analyse (PESTEL, Porter, SWOT, Business Model Canvas,         ║
+║  Value Proposition) et va jusqu'à un aperçu de code MVP.                   ║
+║                                                                            ║
+║  DÉMARRAGE :                                                               ║
+║  1. Ouvre ce fichier dans Chrome ou Firefox                               ║
+║  2. Clique sur ⚙️ → colle ta clé API (sk-ant-...) → Sauvegarder           ║
+║  3. Clique "🚀 Lancer NEXUS autonome" — il fait tout seul.                ║
+║                                                                            ║
+║  CLÉ API → https://console.anthropic.com → API Keys → Create Key          ║
+║  (~0,02 € par cycle d'analyse complet)                                     ║
+║                                                                            ║
+║  MODIFIER : secteurs, couleurs, durées → voir commentaires dans le code.  ║
+║  SAUVEGARDE : tout est stocké dans ton navigateur (localStorage).         ║
+╚══════════════════════════════════════════════════════════════════════════╝
+-->
+
+<style>
+/* ═══ COULEURS — modifie ici pour changer le thème ═══ */
+:root{
+  --bg:#080C18; --surface:#0F1525; --surface2:#161E30;
+  --border:rgba(255,255,255,0.07);
+  --cyan:#00D4FF; --violet:#7B2FFF; --green:#00E87A;
+  --red:#FF4D6D; --amber:#FFBB3A;
+  --text:#DDE2F0; --muted:#5A6A8A;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;top:-30%;left:-10%;width:55%;height:70%;
+  background:radial-gradient(ellipse,rgba(123,47,255,0.07) 0%,transparent 65%);pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;bottom:-25%;right:-8%;width:48%;height:65%;
+  background:radial-gradient(ellipse,rgba(0,212,255,0.05) 0%,transparent 65%);pointer-events:none;z-index:0;}
+
+/* ═══ BARRE HAUT ═══ */
+.topbar{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;
+  padding:14px 28px;background:rgba(8,12,24,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:34px;height:34px;background:linear-gradient(135deg,var(--violet),var(--cyan));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#fff;position:relative;}
+.logo-mark::after{content:'';position:absolute;width:7px;height:7px;background:var(--green);
+  border-radius:50%;top:-2px;right:-2px;animation:pulse 2s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(0,232,122,.4)}70%{box-shadow:0 0 0 7px rgba(0,232,122,0)}100%{box-shadow:0 0 0 0 rgba(0,232,122,0)}}
+.logo-nom{font-family:'Space Grotesk';font-size:19px;font-weight:700;letter-spacing:-.5px;
+  background:linear-gradient(90deg,#fff 40%,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo-tag{font-size:10px;color:var(--violet);font-family:'JetBrains Mono';margin-left:2px;}
+.topbar-d{display:flex;align-items:center;gap:12px;}
+.badge{display:flex;align-items:center;gap:7px;padding:5px 13px;background:rgba(0,232,122,.08);
+  border:1px solid rgba(0,232,122,.18);border-radius:20px;font-family:'JetBrains Mono';font-size:11px;color:var(--green);}
+.badge .pt{width:5px;height:5px;background:var(--green);border-radius:50%;animation:cli 1.5s infinite;}
+@keyframes cli{0%,100%{opacity:1}50%{opacity:.2}}
+.horloge{font-family:'JetBrains Mono';font-size:12px;color:var(--muted);}
+.btn-cfg{width:34px;height:34px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:.2s;color:var(--muted);}
+.btn-cfg:hover{border-color:rgba(0,212,255,.3);color:var(--cyan);}
+
+/* ═══ MODAL ═══ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:center;
+  justify-content:center;backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:.2s;}
+.overlay.on{opacity:1;pointer-events:all;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;width:500px;max-width:95vw;
+  padding:28px;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.5);transform:translateY(12px);transition:.25s;}
+.overlay.on .modal{transform:translateY(0);}
+.modal-t{font-family:'Space Grotesk';font-size:18px;font-weight:700;margin-bottom:6px;}
+.modal-s{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+.modal-x{position:absolute;top:20px;right:20px;background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+.modal-x:hover{color:var(--text);}
+.lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:block;}
+.inp{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;
+  color:var(--text);font-family:'JetBrains Mono';font-size:13px;outline:none;transition:.2s;}
+.inp:focus{border-color:rgba(123,47,255,.4);}
+.astuce{margin-top:10px;padding:12px 14px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.12);
+  border-radius:8px;font-size:12px;color:#8ECFDF;line-height:1.6;}
+.astuce a{color:var(--cyan);}
+.btn-sv{margin-top:20px;width:100%;padding:12px;background:linear-gradient(135deg,var(--violet),#9B5FFF);
+  border:none;border-radius:9px;color:#fff;font-family:'Space Grotesk';font-size:14px;font-weight:600;cursor:pointer;transition:.2s;}
+.btn-sv:hover{opacity:.9;transform:translateY(-1px);}
+hr{border:none;border-top:1px solid var(--border);margin:20px 0;}
+
+/* ═══ LAYOUT ═══ */
+.main{position:relative;z-index:1;max-width:1380px;margin:0 auto;padding:24px 20px;
+  display:grid;grid-template-columns:330px 1fr;gap:18px;min-height:calc(100vh - 65px);}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.panel-h{padding:15px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-t{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.col-g{display:flex;flex-direction:column;gap:18px;}
+
+/* ═══ MODE AUTONOME ═══ */
+.auto-box{padding:18px;}
+.auto-titre{font-family:'Space Grotesk';font-size:15px;font-weight:600;margin-bottom:6px;}
+.auto-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:16px;}
+.btn-auto{width:100%;padding:14px;background:linear-gradient(135deg,var(--violet),#9B5FFF);
+  border:none;border-radius:10px;color:#fff;font-family:'Space Grotesk';font-size:14px;font-weight:600;
+  cursor:pointer;transition:.3s;position:relative;overflow:hidden;}
+.btn-auto::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transition:left .4s;}
+.btn-auto:hover::before{left:100%;}
+.btn-auto:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(123,47,255,.4);}
+.btn-auto:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+.sep-ou{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:11px;}
+.sep-ou::before,.sep-ou::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* secteur guidé (optionnel) */
+.lbl2{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.8px;margin-bottom:7px;}
+.grille-sect{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:6px;}
+.puce{padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  font-size:12px;color:var(--muted);cursor:pointer;text-align:center;transition:.2s;user-select:none;}
+.puce:hover,.puce.on{background:rgba(123,47,255,.14);border-color:rgba(123,47,255,.38);color:#C0A0FF;}
+.txt{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:9px;color:var(--text);
+  font-family:'Inter';font-size:13px;padding:11px 13px;resize:none;outline:none;transition:.2s;line-height:1.6;margin-top:8px;}
+.txt:focus{border-color:rgba(123,47,255,.35);}
+.btn-guide{width:100%;margin-top:10px;padding:11px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:9px;color:var(--cyan);font-family:'Space Grotesk';font-size:13px;font-weight:500;cursor:pointer;transition:.2s;}
+.btn-guide:hover{border-color:rgba(0,212,255,.3);}
+
+/* ═══ MODE ANALYSE ═══ */
+.barre-mode{padding:12px 18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px;}
+.mode-lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+.mode-b{display:flex;gap:6px;}
+.mb{flex:1;padding:7px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;
+  font-size:11px;color:var(--muted);cursor:pointer;text-align:center;transition:.2s;}
+.mb:hover{color:var(--text);}
+.mb.on{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.3);color:var(--cyan);}
+.mode-i{font-family:'JetBrains Mono';font-size:11px;color:var(--muted);}
+.gh{display:flex;flex-wrap:wrap;gap:4px;display:none;}
+.gh.on{display:flex;}
+.hp{width:32px;height:28px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;
+  display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono';font-size:10px;
+  color:var(--muted);cursor:pointer;transition:.2s;user-select:none;}
+.hp.on{background:rgba(0,212,255,.1);border-color:rgba(0,212,255,.3);color:var(--cyan);}
+
+/* ═══ VERSIONS ═══ */
+.versions{padding:10px;display:flex;flex-direction:column;gap:5px;max-height:240px;overflow-y:auto;}
+.vi{padding:10px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  cursor:pointer;transition:.2s;display:flex;align-items:flex-start;gap:9px;}
+.vi:hover{border-color:rgba(0,212,255,.2);}
+.vi.on{background:rgba(0,212,255,.05);border-color:rgba(0,212,255,.25);}
+.vi-ic{width:26px;height:26px;background:rgba(123,47,255,.18);border-radius:6px;display:flex;
+  align-items:center;justify-content:center;font-size:11px;flex-shrink:0;}
+.vi-in{flex:1;min-width:0;}
+.vi-n{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vi-ts{font-family:'JetBrains Mono';font-size:10px;color:var(--muted);margin-top:1px;}
+.vi-sc{font-family:'JetBrains Mono';font-size:11px;padding:2px 7px;border-radius:4px;flex-shrink:0;}
+.s-h{background:rgba(0,232,122,.1);color:var(--green);}
+.s-m{background:rgba(255,187,58,.1);color:var(--amber);}
+.s-b{background:rgba(255,77,109,.1);color:var(--red);}
+.btn-exp{margin:8px 10px 12px;padding:8px 14px;background:var(--surface2);border:1px solid var(--border);
+  border-radius:8px;font-size:12px;color:var(--muted);cursor:pointer;text-align:center;transition:.2s;width:calc(100% - 20px);}
+.btn-exp:hover{border-color:rgba(0,212,255,.25);color:var(--cyan);}
+
+/* ═══ MÉTRIQUES ═══ */
+.metriques{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;}
+.mc{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px;
+  display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;}
+.mc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--ac,var(--cyan));}
+.m-l{font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;}
+.m-v{font-family:'Space Grotesk';font-size:22px;font-weight:700;line-height:1;
+  background:linear-gradient(135deg,var(--ac,var(--cyan)),#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.m-bar{height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.m-bf{height:100%;background:var(--ac,var(--cyan));border-radius:2px;transition:width 1s ease;}
+
+/* ═══ SORTIE / ONGLETS ═══ */
+.sortie{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;
+  display:flex;flex-direction:column;flex:1;}
+.onglets{display:flex;border-bottom:1px solid var(--border);padding:0 14px;background:rgba(0,0,0,.18);overflow-x:auto;}
+.ob{padding:13px 14px;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:none;
+  border-bottom:2px solid transparent;transition:.2s;white-space:nowrap;}
+.ob:hover{color:var(--text);}
+.ob.on{color:var(--cyan);border-bottom-color:var(--cyan);}
+.co{flex:1;overflow-y:auto;display:none;}
+.co.on{display:block;}
+
+/* terminal */
+.term{padding:18px;font-family:'JetBrains Mono';font-size:12px;line-height:1.85;min-height:400px;}
+.tl{display:flex;gap:10px;margin-bottom:1px;}
+.t-ts{color:var(--muted);flex-shrink:0;}
+.t-info{color:var(--cyan);}.t-ok{color:var(--green);}.t-warn{color:var(--amber);}
+.t-err{color:var(--red);}.t-sys{color:var(--violet);}.t-msg{color:#B8C4DC;}
+.curs{display:inline-block;width:7px;height:13px;background:var(--cyan);animation:cur 1s infinite;vertical-align:middle;margin-left:3px;}
+@keyframes cur{0%,100%{opacity:1}50%{opacity:0}}
+
+/* contenus */
+.corps{padding:22px;line-height:1.7;}
+.p-titre{font-family:'Space Grotesk';font-size:22px;font-weight:700;margin-bottom:5px;}
+.p-slogan{color:var(--muted);font-size:14px;margin-bottom:8px;font-style:italic;}
+.p-secteur{display:inline-block;padding:4px 12px;background:rgba(123,47,255,.12);border:1px solid rgba(123,47,255,.25);
+  border-radius:20px;font-size:11px;color:#C0A0FF;margin-bottom:18px;}
+.sect-t{font-family:'Space Grotesk';font-size:12px;font-weight:600;color:var(--cyan);text-transform:uppercase;
+  letter-spacing:1px;margin:22px 0 10px;display:flex;align-items:center;gap:7px;}
+.sect-t::before{content:'';width:3px;height:13px;background:var(--cyan);border-radius:2px;}
+.tx{font-size:13px;color:#AAB4CC;line-height:1.8;}
+.tag{display:inline-block;padding:4px 13px;background:rgba(123,47,255,.12);border:1px solid rgba(123,47,255,.22);
+  border-radius:20px;font-size:12px;color:#C0A0FF;margin:3px;}
+.pf,.pr{display:flex;align-items:flex-start;gap:9px;padding:9px 12px;border-radius:8px;font-size:13px;color:#AAB4CC;margin-bottom:7px;}
+.pf{background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.1);}
+.pr{background:rgba(255,77,109,.04);border:1px solid rgba(255,77,109,.1);}
+
+/* SWOT grille 2x2 */
+.swot{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:18px;}
+.swot-q{padding:15px;border-radius:11px;}
+.sq-f{background:rgba(0,232,122,.05);border:1px solid rgba(0,232,122,.15);}
+.sq-w{background:rgba(255,77,109,.05);border:1px solid rgba(255,77,109,.15);}
+.sq-o{background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);}
+.sq-t{background:rgba(255,187,58,.05);border:1px solid rgba(255,187,58,.15);}
+.sq-h{font-family:'Space Grotesk';font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.sq-li{font-size:12px;color:#AAB4CC;line-height:1.5;margin-bottom:6px;padding-left:14px;position:relative;}
+.sq-li::before{content:'▸';position:absolute;left:0;opacity:.5;}
+
+/* PESTEL */
+.pestel{padding:18px;display:flex;flex-direction:column;gap:9px;}
+.pe{display:flex;gap:12px;padding:13px 15px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;}
+.pe-let{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:14px;flex-shrink:0;background:rgba(123,47,255,.15);color:#C0A0FF;}
+.pe-in{flex:1;}
+.pe-n{font-size:12px;font-weight:600;margin-bottom:3px;}
+.pe-d{font-size:12px;color:var(--muted);line-height:1.5;}
+
+/* Porter */
+.porter{padding:18px;display:flex;flex-direction:column;gap:9px;}
+.po{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;}
+.po-in{flex:1;}
+.po-n{font-size:13px;font-weight:500;margin-bottom:2px;}
+.po-d{font-size:12px;color:var(--muted);line-height:1.5;}
+.po-niv{font-family:'JetBrains Mono';font-size:11px;padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.niv-faible{background:rgba(0,232,122,.1);color:var(--green);}
+.niv-moyen{background:rgba(255,187,58,.1);color:var(--amber);}
+.niv-eleve{background:rgba(255,77,109,.1);color:var(--red);}
+
+/* BMC */
+.bmc{padding:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.bmc-c{padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;}
+.bmc-c.large{grid-column:span 1;}
+.bmc-h{font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;font-weight:600;}
+.bmc-t{font-size:12px;color:#AAB4CC;line-height:1.6;}
+
+/* Radar */
+.radar-z{padding:22px;display:flex;gap:28px;flex-wrap:wrap;}
+.lg-i{margin-bottom:14px;}
+.lg-h{display:flex;justify-content:space-between;margin-bottom:5px;}
+.lg-n{font-size:13px;}
+.lg-s{font-family:'JetBrains Mono';font-size:12px;}
+.lg-b{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.lg-f{height:100%;border-radius:2px;transition:width 1.2s ease;}
+.lg-d{font-size:11px;color:var(--muted);margin-top:4px;}
+
+/* RGPD */
+.rgpd-g{padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.rc{padding:13px 15px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;}
+.rc-t{font-size:12px;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:5px;}
+.rc-c{font-size:12px;color:var(--muted);line-height:1.6;}
+
+/* tendances */
+.tnd{padding:13px 15px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;margin:0 18px 10px;display:flex;gap:11px;}
+.tnd-ic{width:30px;height:30px;border-radius:8px;background:rgba(123,47,255,.15);display:flex;
+  align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.tnd-in{flex:1;}
+.tnd-n{font-size:13px;font-weight:500;margin-bottom:2px;}
+.tnd-d{font-size:12px;color:var(--muted);line-height:1.5;}
+.tnd-a{font-size:11px;color:var(--cyan);margin-top:4px;}
+.tnd-f{font-family:'JetBrains Mono';font-size:11px;padding:3px 9px;border-radius:20px;align-self:flex-start;white-space:nowrap;}
+.f-forte{background:rgba(255,77,109,.1);color:var(--red);}
+.f-montante{background:rgba(0,212,255,.1);color:var(--cyan);}
+.f-stable{background:rgba(0,232,122,.1);color:var(--green);}
+
+/* concurrence */
+.tw{padding:18px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;
+  padding:9px 11px;border-bottom:1px solid var(--border);text-align:left;}
+td{padding:11px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.dp{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;font-family:'JetBrains Mono';}
+.d-o{background:rgba(0,232,122,.1);color:var(--green);}
+.d-n{background:rgba(255,77,109,.1);color:var(--red);}
+.d-p{background:rgba(255,187,58,.1);color:var(--amber);}
+
+/* MVP code */
+.mvp{padding:18px;}
+.mvp-desc{font-size:13px;color:#AAB4CC;line-height:1.7;margin-bottom:14px;}
+.code-box{background:#06090F;border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.code-h{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+  background:rgba(0,0,0,.3);border-bottom:1px solid var(--border);}
+.code-lang{font-family:'JetBrains Mono';font-size:11px;color:var(--cyan);}
+.code-copy{font-size:11px;color:var(--muted);cursor:pointer;padding:3px 10px;border:1px solid var(--border);border-radius:6px;transition:.2s;}
+.code-copy:hover{color:var(--cyan);border-color:rgba(0,212,255,.3);}
+.code-body{padding:16px;overflow-x:auto;font-family:'JetBrains Mono';font-size:12px;line-height:1.7;
+  color:#C8D4E8;white-space:pre;max-height:500px;overflow-y:auto;}
+.code-stack{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;}
+
+/* financier */
+.fin{padding:18px;display:flex;flex-direction:column;gap:13px;}
+.fin-y{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;}
+.fin-yc{padding:14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;text-align:center;}
+.fin-yl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.fin-yv{font-family:'Space Grotesk';font-size:17px;font-weight:700;}
+.fin-g{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.fin-c{padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;}
+.fin-cl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+.fin-cv{font-size:13px;white-space:pre-line;}
+
+/* bannière auto */
+.ban{display:none;align-items:center;gap:9px;padding:9px 16px;background:rgba(123,47,255,.07);
+  border-top:1px solid rgba(123,47,255,.18);font-size:12px;color:#B090EE;}
+.ban.on{display:flex;}
+.pts{display:inline-flex;gap:4px;}
+.pts span{width:5px;height:5px;background:var(--violet);border-radius:50%;animation:att 1.4s infinite;}
+.pts span:nth-child(2){animation-delay:.2s;}.pts span:nth-child(3){animation-delay:.4s;}
+@keyframes att{0%,80%,100%{transform:scale(.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* état vide */
+.vide{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;
+  gap:14px;color:var(--muted);text-align:center;padding:20px;}
+.vide-ic{width:60px;height:60px;background:var(--surface2);border-radius:14px;display:flex;
+  align-items:center;justify-content:center;font-size:26px;border:1px solid var(--border);}
+.vide-t{font-size:15px;font-weight:500;color:var(--text);}
+.vide-d{font-size:13px;line-height:1.6;max-width:280px;}
+
+/* toast */
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:12px 18px;border-radius:10px;
+  font-size:13px;font-weight:500;color:#fff;transform:translateY(80px);opacity:0;transition:.3s;pointer-events:none;}
+.toast.ok{background:rgba(0,232,122,.9);}.toast.err{background:rgba(255,77,109,.9);}
+.toast.show{transform:translateY(0);opacity:1;}
+
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:2px;}
+
+@media(max-width:1000px){.main{grid-template-columns:1fr;}.metriques{grid-template-columns:repeat(3,1fr);}.bmc{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){.metriques{grid-template-columns:1fr 1fr;}.swot,.bmc{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL COMPARAISON -->
+<div class="overlay" id="overlayComp">
+  <div class="modal" style="width:760px;max-width:96vw;">
+    <button class="modal-x" onclick="fermerComparaison()">✕</button>
+    <div class="modal-t">⚖️ Comparer deux versions</div>
+    <div class="modal-s">Sélectionne deux projets pour les mettre côte à côte.</div>
+    <div style="display:flex;gap:12px;margin-bottom:18px;">
+      <select id="compA" class="inp" style="flex:1;font-family:'Inter';" onchange="rendreComparaison()"></select>
+      <select id="compB" class="inp" style="flex:1;font-family:'Inter';" onchange="rendreComparaison()"></select>
+    </div>
+    <div id="compResultat"></div>
+  </div>
+</div>
+
+<!-- MODAL CONFIG -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <button class="modal-x" onclick="fermerCfg()">✕</button>
+    <div class="modal-t">⚙️ Configuration</div>
+    <div class="modal-s">Tes réglages sont stockés dans ton navigateur uniquement.</div>
+    <label class="lbl">Ta clé API Anthropic</label>
+    <input class="inp" type="password" id="inCle" placeholder="sk-ant-api03-..." autocomplete="off">
+    <div class="astuce">🔑 Clé gratuite → <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a><br>
+      Compte → "API Keys" → "Create Key". Coût ~0,02 €/cycle complet.</div>
+    <hr>
+    <label class="lbl">Nom de ton app (optionnel)</label>
+    <input class="inp" type="text" id="inNom" placeholder="NEXUS" style="font-family:'Inter';">
+    <hr>
+    <label class="lbl">Sources d'information</label>
+    <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;user-select:none;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;">
+      <input type="checkbox" id="webOn" style="accent-color:var(--cyan);margin-top:2px;">
+      <span style="font-size:12px;color:#AAB4CC;line-height:1.6;">🌐 <strong style="color:var(--text);">Recherche web en direct</strong><br>
+      NEXUS lit la presse en ligne et les sites des médias (Le Monde, Les Échos, BFM, France Info…) pour ancrer ses tendances dans l'actualité réelle et datée.<br>
+      <span style="color:var(--amber);">⚠ Double environ le coût par cycle (~0,20 € au lieu de 0,11 €).</span></span>
+    </label>
+    <hr>
+    <label class="lbl">Reporting boursier (optionnel, gratuit)</label>
+    <input class="inp" type="password" id="inBourse" placeholder="Clé Finnhub (optionnelle)" autocomplete="off" style="margin-bottom:8px;">
+    <div class="astuce">📈 Clé <strong>gratuite</strong> → <a href="https://finnhub.io/register" target="_blank">finnhub.io/register</a><br>
+      Affiche les indices sectoriels, concurrents cotés et tendances d'investissement liés au projet.<br>
+      <span style="color:var(--green);">✓ Garde-fou intégré : max 50 appels/jour pour rester 100% gratuit. Jamais de dépassement payant.</span></div>
+    <button class="btn-sv" onclick="sauverCfg()">💾 Sauvegarder</button>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-mark">NX</div>
+    <div>
+      <span class="logo-nom" id="appNom">NEXUS</span>
+      <span class="logo-tag">v3 · autonome</span>
+    </div>
+  </div>
+  <div class="topbar-d">
+    <div class="badge"><div class="pt"></div><span id="statut">EN VEILLE</span></div>
+    <div class="badge" id="badgeCout" style="background:rgba(255,187,58,.08);border-color:rgba(255,187,58,.18);color:var(--amber);cursor:pointer;" onclick="resetCout()" title="Coût estimé cumulé — clique pour remettre à zéro">💶 <span id="coutTotal">0,00 €</span></div>
+    <div class="horloge" id="horloge">--:--:--</div>
+    <div class="btn-cfg" onclick="ouvrirCfg()" title="Paramètres">⚙️</div>
+    <div class="btn-cfg" id="btnInstall" onclick="installerApp()" title="Installer comme app"
+      style="display:none;font-size:12px;width:auto;padding:0 10px;gap:5px;color:var(--cyan);border-color:rgba(0,212,255,.3);">
+      📲 Installer
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- COLONNE GAUCHE -->
+  <div class="col-g">
+
+    <!-- MODE AUTONOME -->
+    <div class="panel">
+      <div class="auto-box">
+        <div class="auto-titre">🚀 Mode autonome</div>
+        <div class="auto-desc">NEXUS choisit lui-même un secteur porteur, l'analyse en profondeur (PESTEL · Porter · SWOT · Business Model · Value Proposition) et va jusqu'à un aperçu de code MVP.</div>
+        <button class="btn-auto" id="btnAuto" onclick="lancerAutonome()">🚀 Lancer NEXUS autonome</button>
+
+        <div class="sep-ou">ou guide-le</div>
+
+        <label class="lbl2">Secteur imposé (optionnel)</label>
+        <div class="grille-sect" id="grilleSect">
+          <!-- LISTE DES SECTEURS — ajoute/retire des lignes ici -->
+          <div class="puce" onclick="basculerSect(this)">🤖 IA / Tech</div>
+          <div class="puce" onclick="basculerSect(this)">🏥 Santé</div>
+          <div class="puce" onclick="basculerSect(this)">👴 Silver éco</div>
+          <div class="puce" onclick="basculerSect(this)">🌿 GreenTech</div>
+          <div class="puce" onclick="basculerSect(this)">🎓 EdTech</div>
+          <div class="puce" onclick="basculerSect(this)">💰 Fintech</div>
+          <div class="puce" onclick="basculerSect(this)">🔒 Cyber</div>
+          <div class="puce" onclick="basculerSect(this)">🍃 FoodTech</div>
+        </div>
+        <textarea class="txt" id="inIdee" rows="2" placeholder="Contrainte ou idée précise (optionnel)…"></textarea>
+        <button class="btn-guide" onclick="lancerGuide()">🎯 Lancer avec mes contraintes</button>
+      </div>
+
+      <!-- MODE D'ANALYSE -->
+      <div class="barre-mode">
+        <div class="mode-lbl">Mode d'analyse</div>
+        <div class="mode-b">
+          <div class="mb on" id="mContinu" onclick="setMode('continu')">⚡ Continu</div>
+          <div class="mb" id="mProgramme" onclick="setMode('programme')">🕐 Programmé</div>
+          <div class="mb" id="mManuel" onclick="setMode('manuel')">✋ Manuel</div>
+        </div>
+        <div class="mode-i" id="infoMode">Amélioration auto toutes les heures</div>
+        <div class="gh" id="grilleH"></div>
+      </div>
+    </div>
+
+    <!-- REPORTING TEMPS RÉEL -->
+    <div class="panel">
+      <div class="panel-h">
+        <span class="panel-t">📊 Tableau de bord</span>
+        <span id="chronoLive" style="font-family:'JetBrains Mono';font-size:11px;color:var(--muted);">—</span>
+      </div>
+      <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Projets générés</div>
+          <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--cyan);" id="dashProjets">0</div>
+        </div>
+        <div style="padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Tokens utilisés</div>
+          <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--violet);" id="dashTokens">0</div>
+        </div>
+        <div style="padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Coût cumulé</div>
+          <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--amber);" id="dashCout">0,00 €</div>
+        </div>
+        <div style="padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Temps moyen</div>
+          <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--green);" id="dashTemps">—</div>
+        </div>
+        <div style="padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;grid-column:1/-1;">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Meilleur score obtenu</div>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--green);" id="dashMeilleur">—</span>
+            <span style="font-size:11px;color:var(--muted);" id="dashMeilleurNom"></span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 14px 12px;">
+        <label style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;">
+          <input type="checkbox" id="sonOn" checked style="accent-color:var(--cyan);"> 🔊 Jingle de fin (façon machine à laver)
+        </label>
+      </div>
+    </div>
+
+    <!-- VERSIONS -->
+    <div class="panel" style="flex:1">
+      <div class="panel-h">
+        <span class="panel-t">Versions horodatées</span>
+        <span id="nbV" style="font-family:'JetBrains Mono';font-size:11px;color:var(--muted);">0</span>
+      </div>
+      <div class="versions" id="listeV">
+        <div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6;">
+          Chaque cycle est sauvegardé ici<br>avec sa date et son score.</div>
+      </div>
+      <button class="btn-exp" onclick="ouvrirComparaison()" style="margin-bottom:0;">⚖️ Comparer deux versions</button>
+      <button class="btn-exp" onclick="exporter()">📥 Exporter tout (JSON)</button>
+    </div>
+  </div>
+
+  <!-- COLONNE DROITE -->
+  <div style="display:flex;flex-direction:column;gap:18px;">
+    <!-- MÉTRIQUES -->
+    <div class="metriques">
+      <div class="mc" style="--ac:#00D4FF"><div class="m-l">Global</div><div class="m-v" id="m-global">—</div><div class="m-bar"><div class="m-bf" id="mb-global"></div></div></div>
+      <div class="mc" style="--ac:#7B2FFF"><div class="m-l">Faisabilité</div><div class="m-v" id="m-faisabilite">—</div><div class="m-bar"><div class="m-bf" id="mb-faisabilite"></div></div></div>
+      <div class="mc" style="--ac:#00E87A"><div class="m-l">Rentabilité</div><div class="m-v" id="m-rentabilite">—</div><div class="m-bar"><div class="m-bf" id="mb-rentabilite"></div></div></div>
+      <div class="mc" style="--ac:#FFBB3A"><div class="m-l">Originalité</div><div class="m-v" id="m-originalite">—</div><div class="m-bar"><div class="m-bf" id="mb-originalite"></div></div></div>
+      <div class="mc" style="--ac:#FF4D6D"><div class="m-l">RGPD</div><div class="m-v" id="m-rgpd">—</div><div class="m-bar"><div class="m-bf" id="mb-rgpd"></div></div></div>
+      <div class="mc" style="--ac:#00D4FF"><div class="m-l">Timing</div><div class="m-v" id="m-timing">—</div><div class="m-bar"><div class="m-bf" id="mb-timing"></div></div></div>
+    </div>
+
+    <!-- SORTIE -->
+    <div class="sortie">
+      <div class="onglets">
+        <button class="ob on" onclick="onglet('terminal')">🖥 Terminal</button>
+        <button class="ob" onclick="onglet('projet')">💡 Projet</button>
+        <button class="ob" onclick="onglet('pestel')">🌐 PESTEL</button>
+        <button class="ob" onclick="onglet('porter')">⚔️ Porter</button>
+        <button class="ob" onclick="onglet('swot')">📊 SWOT</button>
+        <button class="ob" onclick="onglet('bmc')">🗂 Business Model</button>
+        <button class="ob" onclick="onglet('analyse')">🧠 Scoring</button>
+        <button class="ob" onclick="onglet('rgpd')">🔒 RGPD</button>
+        <button class="ob" onclick="onglet('tendances')">📈 Tendances</button>
+        <button class="ob" onclick="onglet('concurrence')">🥊 Concurrence</button>
+        <button class="ob" onclick="onglet('mvp')">💻 Code MVP</button>
+        <button class="ob" onclick="onglet('financier')">💶 Financier</button>
+        <button class="ob" onclick="onglet('plan')">🗓 Plan 90j</button>
+        <button class="ob" onclick="onglet('evolution')">📉 Évolution</button>
+        <button class="ob" onclick="onglet('bourse')">📈 Bourse</button>
+      </div>
+
+      <div class="co on" id="o-terminal">
+        <div class="term" id="term">
+          <div class="tl"><span class="t-ts">00:00:00</span><span class="t-sys">[SYS]</span><span class="t-msg">NEXUS v2 autonome — moteur initialisé</span></div>
+          <div class="tl"><span class="t-ts">00:00:00</span><span class="t-info">[INF]</span><span class="t-msg">Pipeline : Secteur → PESTEL → Porter → SWOT → BMC → VPC → MVP → Scoring</span></div>
+          <div class="tl"><span class="t-ts">00:00:01</span><span class="t-ok">[OK]</span><span class="t-msg">Prêt. Configure ta clé (⚙️) puis lance le mode autonome.</span></div>
+          <span class="curs"></span>
+        </div>
+      </div>
+
+      <div class="co" id="o-projet"><div id="c-projet"><div class="vide"><div class="vide-ic">💡</div><div class="vide-t">Aucun projet</div><div class="vide-d">Lance NEXUS autonome pour générer un projet complet.</div></div></div></div>
+      <div class="co" id="o-pestel"><div id="c-pestel"><div class="vide"><div class="vide-ic">🌐</div><div class="vide-t">Analyse PESTEL</div><div class="vide-d">Politique, Économique, Social, Technologique, Écologique, Légal.</div></div></div></div>
+      <div class="co" id="o-porter"><div id="c-porter"><div class="vide"><div class="vide-ic">⚔️</div><div class="vide-t">5 forces de Porter</div><div class="vide-d">Intensité concurrentielle du secteur.</div></div></div></div>
+      <div class="co" id="o-swot"><div id="c-swot"><div class="vide"><div class="vide-ic">📊</div><div class="vide-t">Matrice SWOT</div><div class="vide-d">Forces, Faiblesses, Opportunités, Menaces.</div></div></div></div>
+      <div class="co" id="o-bmc"><div id="c-bmc"><div class="vide"><div class="vide-ic">🗂</div><div class="vide-t">Business Model Canvas</div><div class="vide-d">Les 9 blocs du modèle économique + Value Proposition.</div></div></div></div>
+      <div class="co" id="o-analyse"><div id="c-analyse"><div class="vide"><div class="vide-ic">🧠</div><div class="vide-t">Scoring radar</div><div class="vide-d">Évaluation sur 6 dimensions.</div></div></div></div>
+      <div class="co" id="o-rgpd"><div id="c-rgpd"><div class="vide"><div class="vide-ic">🔒</div><div class="vide-t">Audit RGPD</div><div class="vide-d">Conformité européenne.</div></div></div></div>
+      <div class="co" id="o-tendances"><div id="c-tendances"><div class="vide"><div class="vide-ic">📈</div><div class="vide-t">Tendances</div><div class="vide-d">Signaux du marché.</div></div></div></div>
+      <div class="co" id="o-concurrence"><div id="c-concurrence"><div class="vide"><div class="vide-ic">🥊</div><div class="vide-t">Concurrence</div><div class="vide-d">Positionnement vs acteurs réels.</div></div></div></div>
+      <div class="co" id="o-mvp"><div id="c-mvp"><div class="vide"><div class="vide-ic">💻</div><div class="vide-t">Code MVP</div><div class="vide-d">Aperçu du cœur technique fonctionnel.</div></div></div></div>
+      <div class="co" id="o-financier"><div id="c-financier"><div class="vide"><div class="vide-ic">💶</div><div class="vide-t">Modèle financier</div><div class="vide-d">Projections sur 3 ans.</div></div></div></div>
+      <div class="co" id="o-plan"><div id="c-plan"><div class="vide"><div class="vide-ic">🗓</div><div class="vide-t">Plan d'action 90 jours</div><div class="vide-d">Feuille de route concrète de l'idée au lancement.</div></div></div></div>
+      <div class="co" id="o-evolution"><div id="c-evolution"><div class="vide"><div class="vide-ic">📉</div><div class="vide-t">Évolution des scores</div><div class="vide-d">La progression de tes projets au fil des versions.</div></div></div></div>
+      <div class="co" id="o-bourse"><div id="c-bourse"><div class="vide"><div class="vide-ic">📈</div><div class="vide-t">Reporting boursier</div><div class="vide-d">Active une clé Finnhub gratuite dans ⚙️ pour voir le marché financier lié au secteur.</div></div></div></div>
+
+      <div class="ban" id="ban"><div class="pts"><span></span><span></span><span></span></div><span id="banTxt">L'IA analyse et améliore en continu…</span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══ ÉTAT GLOBAL ═══ */
+const E = {
+  mode:'continu', heures:[8,9,10,11,12,13,14,15,16,17,18,19,20,21,22],
+  enCours:false, versions:[], actuelle:null, boucle:null, compteur:0,
+  coutCumul:0, // coût estimé cumulé en euros
+  tokensCumul:0, // tokens totaux consommés
+  tempsTotal:0, // somme des durées de génération (ms) pour la moyenne
+  chrono:null, chronoDebut:0, // pour le chronomètre live
+  secteurs:[], 
+};
+
+/* ═══ STOCKAGE NAVIGATEUR ═══ */
+function charger(){
+  try{
+    const s=localStorage.getItem('nexus2_versions');
+    if(s){E.versions=JSON.parse(s);E.compteur=E.versions.length;afficherV();
+      if(E.versions.length)log('ok',`${E.versions.length} version(s) restaurée(s)`);}
+    const n=localStorage.getItem('nexus2_nom');
+    if(n)document.getElementById('appNom').textContent=n;
+    const ct=localStorage.getItem('nexus2_cout');
+    if(ct){E.coutCumul=parseFloat(ct)||0;majCout();}
+    const tk=localStorage.getItem('nexus2_tokens');
+    if(tk)E.tokensCumul=parseInt(tk)||0;
+    const tp=localStorage.getItem('nexus2_temps');
+    if(tp)E.tempsTotal=parseInt(tp)||0;
+    majDashboard();
+  }catch(e){log('warn','Chargement impossible : '+e.message);}
+}
+function sauverNav(){try{localStorage.setItem('nexus2_versions',JSON.stringify(E.versions));}
+  catch(e){toast('Sauvegarde échouée (espace plein)','err');}}
+
+/* ═══ CONFIG ═══ */
+function ouvrirCfg(){document.getElementById('inCle').value=localStorage.getItem('nexus2_cle')||'';
+  document.getElementById('inNom').value=localStorage.getItem('nexus2_nom')||'';
+  document.getElementById('webOn').checked=localStorage.getItem('nexus3_web')==='1';
+  document.getElementById('inBourse').value=localStorage.getItem('nexus3_bourse')||'';
+  document.getElementById('overlay').classList.add('on');}
+function fermerCfg(){document.getElementById('overlay').classList.remove('on');}
+function sauverCfg(){
+  const c=document.getElementById('inCle').value.trim();
+  const n=document.getElementById('inNom').value.trim();
+  if(!c){toast('Entre ta clé API','err');return;}
+  if(!c.startsWith('sk-ant-')){toast('La clé doit commencer par sk-ant-','err');return;}
+  localStorage.setItem('nexus2_cle',c);
+  if(n){localStorage.setItem('nexus2_nom',n);document.getElementById('appNom').textContent=n;}
+  localStorage.setItem('nexus3_web',document.getElementById('webOn').checked?'1':'0');
+  const kb=document.getElementById('inBourse').value.trim();
+  localStorage.setItem('nexus3_bourse',kb);
+  if(kb)log('info','📈 Reporting boursier activé (Finnhub, mode gratuit sécurisé)');
+  fermerCfg();toast('Configuration sauvegardée ✓','ok');log('ok','Clé API enregistrée');
+  if(document.getElementById('webOn').checked)log('info','🌐 Recherche web activée — tendances ancrées dans l\'actualité');
+}
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')fermerCfg();});
+
+/* ═══ HORLOGE ═══ */
+function horloge(){const n=new Date();
+  document.getElementById('horloge').textContent=
+    `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;}
+setInterval(horloge,1000);horloge();
+
+/* ═══ HEURES ═══ */
+function grilleHeures(){const g=document.getElementById('grilleH');g.innerHTML='';
+  for(let h=0;h<24;h++){const p=document.createElement('div');
+    p.className='hp'+(E.heures.includes(h)?' on':'');p.textContent=String(h).padStart(2,'0');
+    p.onclick=()=>{p.classList.toggle('on');
+      if(E.heures.includes(h))E.heures=E.heures.filter(x=>x!==h);
+      else{E.heures.push(h);E.heures.sort((a,b)=>a-b);}infoMode();};
+    g.appendChild(p);}}
+grilleHeures();
+
+/* ═══ MODE ═══ */
+function setMode(m){E.mode=m;
+  [['continu','mContinu'],['programme','mProgramme'],['manuel','mManuel']].forEach(([k,id])=>
+    document.getElementById(id).classList.toggle('on',k===m));
+  document.getElementById('grilleH').classList.toggle('on',m==='programme');
+  infoMode();gererBoucle();}
+function infoMode(){const e=document.getElementById('infoMode');
+  if(E.mode==='continu')e.textContent='Amélioration auto toutes les heures';
+  else if(E.mode==='programme')e.textContent=`Actif sur ${E.heures.length} h programmée(s)`;
+  else e.textContent='Analyse sur demande uniquement';}
+function gererBoucle(){
+  if(E.boucle){clearInterval(E.boucle);E.boucle=null;}
+  if(E.mode==='manuel'){document.getElementById('ban').classList.remove('on');return;}
+  E.boucle=setInterval(()=>{
+    if(E.enCours||!E.actuelle)return;
+    if(E.mode==='programme'&&!E.heures.includes(new Date().getHours()))return;
+    log('sys','Cycle auto → amélioration du projet…');
+    lancerCycle(E.actuelle.secteurImpose||'', E.actuelle.idee||'', true);
+  },3600000); // 1 heure par défaut (3600000 ms). Pour tester plus vite : 300000 = 5 min
+}
+gererBoucle();
+
+/* ═══ SECTEURS GUIDÉS ═══ */
+function basculerSect(el){el.classList.toggle('on');const l=el.textContent.trim();
+  if(E.secteurs.includes(l))E.secteurs=E.secteurs.filter(x=>x!==l);else E.secteurs.push(l);}
+
+/* ═══ ONGLETS ═══ */
+const ONGLETS=['terminal','projet','pestel','porter','swot','bmc','analyse','rgpd','tendances','concurrence','mvp','financier','plan','evolution','bourse'];
+function onglet(id){
+  document.querySelectorAll('.ob').forEach((b,i)=>b.classList.toggle('on',ONGLETS[i]===id));
+  document.querySelectorAll('.co').forEach(c=>c.classList.remove('on'));
+  document.getElementById('o-'+id).classList.add('on');}
+
+/* ═══ LOG ═══ */
+function log(type,msg){const n=new Date();
+  const ts=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+  const cl={info:'t-info',ok:'t-ok',warn:'t-warn',err:'t-err',sys:'t-sys'}[type]||'t-info';
+  const lb={info:'[INF]',ok:'[OK]',warn:'[WRN]',err:'[ERR]',sys:'[SYS]'}[type]||'[INF]';
+  const t=document.getElementById('term'),c=t.querySelector('.curs');
+  const l=document.createElement('div');l.className='tl';
+  l.innerHTML=`<span class="t-ts">${ts}</span><span class="${cl}">${lb}</span><span class="t-msg">${msg}</span>`;
+  if(c)t.insertBefore(l,c);else t.appendChild(l);t.scrollTop=t.scrollHeight;}
+
+function toast(m,t='ok'){const e=document.getElementById('toast');e.textContent=m;
+  e.className=`toast ${t} show`;setTimeout(()=>e.classList.remove('show'),3000);}
+
+/* ═══ LANCEMENTS ═══ */
+function lancerAutonome(){lancerCycle('','',false);}
+function lancerGuide(){
+  const sect=E.secteurs.join(', ');
+  const idee=document.getElementById('inIdee').value.trim();
+  lancerCycle(sect,idee,false);
+}
+
+/* ═══ CYCLE PRINCIPAL ═══ */
+async function lancerCycle(secteurImpose, idee, estAuto){
+  if(E.enCours)return;
+  const cle=localStorage.getItem('nexus2_cle');
+  if(!cle){toast('Configure ta clé API (⚙️)','err');ouvrirCfg();return;}
+
+  E.enCours=true;
+  demarrerChrono();
+  const btn=document.getElementById('btnAuto');btn.disabled=true;
+  btn.innerHTML='⚙️ Analyse en cours…';
+  document.getElementById('statut').textContent='ANALYSE';
+  onglet('terminal');
+
+  if(estAuto)log('sys','━━ Cycle d\'amélioration automatique ━━');
+  else log('sys','━━ Nouveau cycle NEXUS autonome ━━');
+
+  if(secteurImpose)log('info',`Secteur imposé : ${secteurImpose}`);
+  else log('info','Sélection autonome du secteur porteur…');
+  await pause(400);
+  log('info','Analyse PESTEL du secteur…');await pause(300);
+  log('info','Évaluation des 5 forces de Porter…');await pause(300);
+  log('info','Construction de la matrice SWOT…');await pause(300);
+  log('info','Business Model Canvas + Value Proposition…');await pause(300);
+  log('info','Génération de l\'aperçu de code MVP…');await pause(300);
+  log('info','Audit RGPD + scoring multicritère…');await pause(300);
+  log('sys','Envoi du pipeline complet à Claude…');
+  const webActif=localStorage.getItem('nexus3_web')==='1';
+  if(webActif)log('info','🌐 Recherche web active — consultation de la presse en ligne…');
+
+  try{
+    const corps={
+      model:"claude-sonnet-4-6", max_tokens:8000,
+      system:SYS_PROMPT,
+      messages:[{role:"user",content:userPrompt(secteurImpose,idee,estAuto)}]
+    };
+    // Outil de recherche web (optionnel) : ancre les tendances dans l'actualité réelle
+    if(webActif){
+      corps.tools=[{type:"web_search_20250305",name:"web_search",max_uses:3}];
+    }
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":cle,
+        "anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify(corps)
+    });
+    if(!r.ok){const er=await r.json();throw new Error(er.error?.message||`Erreur API ${r.status}`);}
+    const data=await r.json();
+    // ─ Calcul du coût réel à partir des tokens réellement consommés ─
+    if(data.usage){
+      const tokIn=data.usage.input_tokens||0;
+      const tokOut=data.usage.output_tokens||0;
+      // Tarifs Claude Sonnet (vérifie anthropic.com/pricing) : 3$/M entrée, 15$/M sortie
+      // Conversion approximative USD→EUR : 0,92
+      const coutUSD=(tokIn/1e6*3)+(tokOut/1e6*15);
+      const coutEUR=coutUSD*0.92;
+      E.coutCumul+=coutEUR;
+      E.tokensCumul+=tokIn+tokOut;
+      majCout();
+      majDashboard();
+      log('info',`Tokens : ${tokIn} entrée + ${tokOut} sortie → ${coutEUR.toFixed(3)} € ce cycle`);
+    }
+    // Avec recherche web, content contient plusieurs blocs : on prend tout le texte
+    const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n')||data.content[0].text||'';
+    // Compter les recherches web effectuées
+    const nbRecherches=data.content.filter(b=>b.type==='server_tool_use').length;
+    if(nbRecherches>0)log('ok',`🌐 ${nbRecherches} recherche(s) web effectuée(s)`);
+    log('ok','Réponse reçue — analyse du JSON…');
+    let R=parserJSONrobuste(raw);
+    if(!R){
+      log('err','JSON illisible même après réparation');
+      log('warn','L\'IA a renvoyé un format incorrect. Nouvelle tentative conseillée.');
+      throw new Error('Format de réponse invalide (JSON non réparable)');
+    }
+    if(R._repare)log('warn','⚠ JSON réparé automatiquement (filet de sécurité activé)');
+    // Validation de cohérence des données
+    const alertes=validerCoherence(R);
+    alertes.forEach(a=>log('warn','⚠ '+a));
+
+    log('ok',`Projet : "${R.projet.nom}" (secteur : ${R.projet.secteur})`);
+    log('info',`Global ${R.scores.global} · Faisa ${R.scores.faisabilite} · Renta ${R.scores.rentabilite} · RGPD ${R.scores.rgpd}`);
+
+    const v=sauverVersion(R,secteurImpose,idee);
+    const duree=arreterChrono();
+    E.tempsTotal+=duree;
+    log('ok',`Version ${v.id} horodatée — ${v.horodatage}`);
+    log('ok',`⏱ Généré en ${(duree/1000).toFixed(1)}s`);
+    toast(`Version ${v.id} prête en ${(duree/1000).toFixed(1)}s ✓`,'ok');
+
+    afficherTout(R);
+    majDashboard();
+    document.getElementById('ban').classList.add('on');
+    jouerJingle('succes'); // 🎵 ding-dong de fin, façon machine à laver
+  }catch(err){
+    arreterChrono();
+    log('err',`Erreur : ${err.message}`);
+    if(err.message.includes('401')){log('warn','Clé invalide — vérifie ⚙️');toast('Clé API invalide','err');}
+    else if(err.message.includes('429'))log('warn','Limite atteinte — réessaie dans 1 min');
+    else toast('Erreur : '+err.message,'err');
+    jouerJingle('erreur'); // son d'erreur discret
+  }
+  E.enCours=false;btn.disabled=false;btn.innerHTML='🚀 Lancer NEXUS autonome';
+  document.getElementById('statut').textContent=E.mode==='manuel'?'EN VEILLE':'ACTIF';
+}
+
+/* ═══ PROMPTS ═══ */
+const SYS_PROMPT=`Tu es NEXUS, moteur autonome expert en création et évaluation de projets innovants.
+Tu mènes un pipeline d'analyse stratégique complet et tu réponds UNIQUEMENT en JSON valide, sans backticks ni texte autour.
+
+Structure EXACTE :
+{
+  "projet":{"nom":"","secteur":"","tagline":"","description":"","probleme_resolu":"","solution_unique":"","technologie_cle":["","","",""],"mvp_timeline":"","cible":"","justification_secteur":""},
+  "scores":{"global":0,"faisabilite":0,"rentabilite":0,"originalite":0,"rgpd":0,"timing_marche":0},
+  "pestel":{"politique":"","economique":"","social":"","technologique":"","ecologique":"","legal":""},
+  "porter":[
+    {"force":"Menace nouveaux entrants","niveau":"FAIBLE|MOYEN|ÉLEVÉ","analyse":""},
+    {"force":"Pouvoir des clients","niveau":"","analyse":""},
+    {"force":"Pouvoir des fournisseurs","niveau":"","analyse":""},
+    {"force":"Menace des substituts","niveau":"","analyse":""},
+    {"force":"Rivalité interne","niveau":"","analyse":""}
+  ],
+  "swot":{"forces":["","",""],"faiblesses":["","",""],"opportunites":["","",""],"menaces":["","",""]},
+  "bmc":{"segments":"","proposition_valeur":"","canaux":"","relation_client":"","revenus":"","ressources_cles":"","activites_cles":"","partenaires":"","structure_couts":""},
+  "value_proposition":{"job_client":"","douleurs":"","solutions":""},
+  "rgpd":{"niveau_risque":"FAIBLE|MOYEN|ÉLEVÉ","donnees_collectees":["","","",""],"mesures_requises":["","","",""],"base_legale":"","dpo_requis":false,"aipd_requise":false,"recommandation":""},
+  "tendances":[{"nom":"","description":"","force":"FORTE|MONTANTE|STABLE","icone":"emoji","alignement":""},{"nom":"","description":"","force":"","icone":"","alignement":""},{"nom":"","description":"","force":"","icone":"","alignement":""},{"nom":"","description":"","force":"","icone":"","alignement":""}],
+  "concurrence":[
+    {"acteur":"Notre solution","positionnement":"Disrupteur","faisabilite":"✓","rgpd":"✓","innovation":"✓","prix":"✓","ia":"✓"},
+    {"acteur":"Concurrent réel 1","positionnement":"","faisabilite":"✓|✗|~","rgpd":"✓|✗|~","innovation":"✓|✗|~","prix":"✓|✗|~","ia":"✓|✗|~"},
+    {"acteur":"Concurrent réel 2","positionnement":"","faisabilite":"✓|✗|~","rgpd":"✓|✗|~","innovation":"✓|✗|~","prix":"✓|✗|~","ia":"✓|✗|~"},
+    {"acteur":"Concurrent réel 3","positionnement":"","faisabilite":"✓|✗|~","rgpd":"✓|✗|~","innovation":"✓|✗|~","prix":"✓|✗|~","ia":"✓|✗|~"}
+  ],
+  "mvp":{"description":"","langage":"Python|JavaScript|...","code":"code réel et fonctionnel, 30-60 lignes, échappé pour JSON","stack":["","","",""]},
+  "financier":{"modele_monetisation":"","prix_moyen":"","tam":"","sam":"","annee1_revenus":"","annee2_revenus":"","annee3_revenus":"","seuil_rentabilite":"","cout_infra_mensuel":"","investissement_initial":"","roi_projete":"","details":"","scenarios":{"pessimiste":{"revenus_an3":"","probabilite":"","hypothese":""},"realiste":{"revenus_an3":"","probabilite":"","hypothese":""},"optimiste":{"revenus_an3":"","probabilite":"","hypothese":""}},"hypotheses":["","",""],"couts_postes":[{"poste":"Infrastructure / hébergement","montant_mensuel":""},{"poste":"Marketing / acquisition","montant_mensuel":""},{"poste":"Salaires / prestations","montant_mensuel":""},{"poste":"Outils / licences","montant_mensuel":""}]},
+  "plan_action":[{"periode":"Semaines 1-2","action":"","livrable":""},{"periode":"Semaines 3-4","action":"","livrable":""},{"periode":"Semaines 5-6","action":"","livrable":""},{"periode":"Semaines 7-8","action":"","livrable":""},{"periode":"Semaines 9-10","action":"","livrable":""},{"periode":"Semaines 11-13","action":"","livrable":""}],
+  "bourse":{"contexte_marche":"","tendance_investissement":"","tickers_concurrents":[{"symbole":"AAPL","nom":"Exemple Corp"}],"indice_secteur":"","signal":"HAUSSE|STABLE|BAISSE"}
+}
+
+Le champ mvp.code doit contenir du VRAI code fonctionnel (le cœur technique du projet), correctement échappé pour être valide en JSON (\\n pour les retours ligne).`;
+
+function userPrompt(secteurImpose,idee,estAuto){
+  let p;
+  if(secteurImpose){
+    p=`Génère un projet innovant dans le(s) secteur(s) : ${secteurImpose}.`;
+  }else{
+    p=`Choisis TOI-MÊME le secteur le plus porteur en 2026 (silver économie, IA PME, greentech, cybersécurité, santé numérique, edtech, foodtech...) en justifiant ton choix dans projet.justification_secteur. Privilégie les tendances structurelles irréversibles (démographie, climat).`;
+  }
+  if(idee)p+=` Contrainte fournie : "${idee}".`;
+
+  // ANTI-RÉPÉTITION : on rappelle à NEXUS ce qu'il a déjà proposé
+  if(E.versions.length>0 && !estAuto){
+    const dejaVus=E.versions.slice(0,8).map(v=>`"${v.data.projet.nom}" (${v.data.projet.secteur})`).join(', ');
+    p+=`\n\n⚠️ ANTI-RÉPÉTITION : tu as DÉJÀ proposé ces projets : ${dejaVus}. Propose quelque chose de NETTEMENT DIFFÉRENT — autre secteur ou autre angle radicalement neuf. Ne te répète pas.`;
+  }
+
+  if(estAuto){
+    const dernier=E.actuelle?`"${E.actuelle.data.projet.nom}"`:'le projet précédent';
+    p+=` Ceci est un cycle d'AMÉLIORATION de ${dernier} : garde le même concept de base mais propose une version plus aboutie, affine les scores, renforce la différenciation et corrige les faiblesses identifiées.`;
+  }
+
+  // Recherche web si activée
+  if(localStorage.getItem('nexus3_web')==='1'){
+    p+=`\n\n🌐 RECHERCHE WEB : utilise l'outil de recherche pour consulter l'actualité récente (presse, médias, rapports 2025-2026). Ancre tes tendances et tes concurrents dans des données RÉELLES et datées. Cite tes sources dans les descriptions de tendances.`;
+  }
+
+  p+=`
+Exigences :
+1. Réaliste et faisable en 2025-2026
+2. Clairement différencié (analyse concurrentielle avec 3 acteurs RÉELS nommés)
+3. RGPD strict : hébergement Europe, privacy by design, minimisation
+4. Rentabilité chiffrée et crédible
+5. Aperçu de code MVP RÉEL et fonctionnel (le cœur technique)
+6. Sois critique et honnête sur les risques
+7. Financier : 3 scénarios (pessimiste/réaliste/optimiste) avec probabilités, hypothèses visibles, coûts par poste. Crédible, pas de chiffres gonflés.
+8. Plan d'action 90 jours : 6 étapes concrètes (semaine, action, livrable) pour passer de l'idée au lancement.
+9. Bourse : identifie 2-4 entreprises RÉELLES cotées en bourse liées au secteur, avec leur symbole boursier exact (ticker, ex: AAPL, MSFT, ou pour Euronext Paris ajoute .PA comme "OR.PA"). Décris le contexte de marché et la tendance d'investissement du secteur.`;
+  return p;
+}
+
+/* ═══ AFFICHAGE ═══ */
+function afficherTout(d){
+  scores(d.scores);projet(d.projet);pestel(d.pestel);porter(d.porter);
+  swot(d.swot);bmc(d.bmc,d.value_proposition);analyse(d.scores);
+  rgpd(d.rgpd);tendances(d.tendances);concurrence(d.concurrence);
+  mvp(d.mvp);financier(d.financier);
+  if(d.plan_action)planAction(d.plan_action);
+  evolution();
+  if(d.bourse)bourse(d.bourse);
+  setTimeout(()=>onglet('projet'),400);
+}
+
+function scores(s){[['global',s.global],['faisabilite',s.faisabilite],['rentabilite',s.rentabilite],
+  ['originalite',s.originalite],['rgpd',s.rgpd],['timing',s.timing_marche]].forEach(([k,v])=>{
+  const e=document.getElementById('m-'+k),b=document.getElementById('mb-'+k);
+  if(e)e.textContent=v;if(b)setTimeout(()=>b.style.width=v+'%',100);});}
+
+function projet(p){document.getElementById('c-projet').innerHTML=`
+  <div class="corps">
+    <div class="p-titre">${p.nom}</div>
+    <div class="p-slogan">${p.tagline}</div>
+    <span class="p-secteur">📍 ${p.secteur}</span>
+    ${p.justification_secteur?`<div class="sect-t">Pourquoi ce secteur</div><div class="tx">${p.justification_secteur}</div>`:''}
+    <div class="sect-t">Description</div><div class="tx">${p.description}</div>
+    <div class="sect-t">Problème résolu</div><div class="tx">${p.probleme_resolu}</div>
+    <div class="sect-t">Ce qui nous différencie</div><div class="tx">${p.solution_unique}</div>
+    <div class="sect-t">Technologies clés</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">${p.technologie_cle.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:18px;">
+      <div style="padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;">Cible</div>
+        <div style="font-size:13px;">${p.cible}</div></div>
+      <div style="padding:13px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;">Timeline MVP</div>
+        <div style="font-size:13px;color:var(--cyan);">${p.mvp_timeline}</div></div>
+    </div>
+  </div>`;}
+
+function pestel(pe){const items=[
+  ['P','Politique',pe.politique],['E','Économique',pe.economique],['S','Social',pe.social],
+  ['T','Technologique',pe.technologique],['E','Écologique',pe.ecologique],['L','Légal',pe.legal]];
+  document.getElementById('c-pestel').innerHTML=`<div class="pestel">${items.map(([l,n,d])=>`
+    <div class="pe"><div class="pe-let">${l}</div><div class="pe-in"><div class="pe-n">${n}</div><div class="pe-d">${d}</div></div></div>`).join('')}</div>`;}
+
+function porter(forces){const cl=n=>n==='FAIBLE'?'niv-faible':n==='ÉLEVÉ'?'niv-eleve':'niv-moyen';
+  document.getElementById('c-porter').innerHTML=`<div class="porter">${forces.map(f=>`
+    <div class="po"><div class="po-in"><div class="po-n">${f.force}</div><div class="po-d">${f.analyse}</div></div>
+      <div class="po-niv ${cl(f.niveau)}">${f.niveau}</div></div>`).join('')}</div>`;}
+
+function swot(s){const blk=(cls,ic,titre,items)=>`
+  <div class="swot-q ${cls}"><div class="sq-h">${ic} ${titre}</div>
+    ${items.map(i=>`<div class="sq-li">${i}</div>`).join('')}</div>`;
+  document.getElementById('c-swot').innerHTML=`<div class="swot">
+    ${blk('sq-f','💪','Forces',s.forces)}${blk('sq-w','😟','Faiblesses',s.faiblesses)}
+    ${blk('sq-o','🚀','Opportunités',s.opportunites)}${blk('sq-t','⚠️','Menaces',s.menaces)}</div>`;}
+
+function bmc(b,vp){const c=(h,t,large)=>`<div class="bmc-c">
+  <div class="bmc-h">${h}</div><div class="bmc-t">${t}</div></div>`;
+  document.getElementById('c-bmc').innerHTML=`
+    <div class="bmc">
+      ${c('Partenaires clés',b.partenaires)}${c('Activités clés',b.activites_cles)}${c('Proposition de valeur',b.proposition_valeur)}
+      ${c('Relation client',b.relation_client)}${c('Segments clients',b.segments)}
+      ${c('Ressources clés',b.ressources_cles)}${c('Canaux',b.canaux)}
+      ${c('Structure de coûts',b.structure_couts)}${c('Flux de revenus',b.revenus)}
+    </div>
+    <div style="padding:0 18px 18px;">
+      <div class="sect-t">Value Proposition Canvas</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <div style="padding:13px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.12);border-radius:9px;">
+          <div style="font-size:10px;color:var(--cyan);text-transform:uppercase;margin-bottom:6px;">🎯 Job du client</div>
+          <div style="font-size:12px;color:#AAB4CC;line-height:1.6;">${vp.job_client}</div></div>
+        <div style="padding:13px;background:rgba(255,77,109,.04);border:1px solid rgba(255,77,109,.12);border-radius:9px;">
+          <div style="font-size:10px;color:var(--red);text-transform:uppercase;margin-bottom:6px;">😣 Douleurs</div>
+          <div style="font-size:12px;color:#AAB4CC;line-height:1.6;">${vp.douleurs}</div></div>
+        <div style="padding:13px;background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.12);border-radius:9px;">
+          <div style="font-size:10px;color:var(--green);text-transform:uppercase;margin-bottom:6px;">✨ Soulagements</div>
+          <div style="font-size:12px;color:#AAB4CC;line-height:1.6;">${vp.solutions}</div></div>
+      </div>
+    </div>`;}
+
+function analyse(s){const dims=[
+  {n:'Faisabilité',v:s.faisabilite,c:'#7B2FFF',d:'Complexité d\'implémentation'},
+  {n:'Rentabilité',v:s.rentabilite,c:'#00E87A',d:'Potentiel de revenus'},
+  {n:'Originalité',v:s.originalite,c:'#FFBB3A',d:'Différenciation marché'},
+  {n:'RGPD',v:s.rgpd,c:'#00D4FF',d:'Conformité européenne'},
+  {n:'Timing',v:s.timing_marche,c:'#FF4D6D',d:'Alignement tendances'}];
+  document.getElementById('c-analyse').innerHTML=`<div class="radar-z"><div>${radar(dims)}</div>
+    <div style="flex:1;min-width:200px;">${dims.map(d=>`<div class="lg-i">
+      <div class="lg-h"><span class="lg-n">${d.n}</span><span class="lg-s" style="color:${d.c}">${d.v}%</span></div>
+      <div class="lg-b"><div class="lg-f" style="width:${d.v}%;background:${d.c}"></div></div>
+      <div class="lg-d">${d.d}</div></div>`).join('')}</div></div>`;}
+
+function radar(dims){const cx=155,cy=155,r=115,n=dims.length;
+  const ang=dims.map((_,i)=>(Math.PI*2*i/n)-Math.PI/2);
+  let g='';[0.25,0.5,0.75,1].forEach(lv=>{
+    g+=`<polygon points="${ang.map(a=>`${cx+r*lv*Math.cos(a)},${cy+r*lv*Math.sin(a)}`).join(' ')}" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="1"/>`;});
+  const ax=ang.map((a,i)=>{const x2=cx+r*Math.cos(a),y2=cy+r*Math.sin(a),lx=cx+(r+18)*Math.cos(a),ly=cy+(r+18)*Math.sin(a);
+    const an=Math.cos(a)>.1?'start':Math.cos(a)<-.1?'end':'middle';
+    return `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,.07)"/><text x="${lx}" y="${ly}" fill="rgba(255,255,255,.4)" font-size="10" text-anchor="${an}" dominant-baseline="middle">${dims[i].n}</text>`;}).join('');
+  const pts=dims.map((d,i)=>{const v=d.v/100;return`${cx+r*v*Math.cos(ang[i])},${cy+r*v*Math.sin(ang[i])}`;}).join(' ');
+  const dots=dims.map((d,i)=>{const v=d.v/100;return`<circle cx="${cx+r*v*Math.cos(ang[i])}" cy="${cy+r*v*Math.sin(ang[i])}" r="4" fill="${d.c}" stroke="#080C18" stroke-width="2"/>`;}).join('');
+  return`<svg width="310" height="310" viewBox="0 0 310 310">${g}${ax}<polygon points="${pts}" fill="rgba(123,47,255,.18)" stroke="#7B2FFF" stroke-width="2"/>${dots}</svg>`;}
+
+function rgpd(r){const cr=r.niveau_risque==='FAIBLE'?'var(--green)':r.niveau_risque==='MOYEN'?'var(--amber)':'var(--red)';
+  document.getElementById('c-rgpd').innerHTML=`
+    <div style="padding:18px;"><div style="display:flex;align-items:center;gap:14px;padding:15px;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:11px;">
+      <div style="font-size:30px;">🔒</div><div><div style="font-size:11px;color:var(--muted);">Niveau de risque RGPD</div>
+        <div style="font-size:19px;font-weight:700;color:${cr};font-family:'Space Grotesk';">${r.niveau_risque}</div></div>
+      <div style="margin-left:auto;text-align:right;"><div style="font-size:10px;color:var(--muted);">DPO</div>
+        <div style="font-size:13px;font-weight:600;color:${r.dpo_requis?'var(--amber)':'var(--green)'};">${r.dpo_requis?'⚠ Requis':'✓ Non'}</div></div>
+      <div style="text-align:right;"><div style="font-size:10px;color:var(--muted);">AIPD</div>
+        <div style="font-size:13px;font-weight:600;color:${r.aipd_requise?'var(--red)':'var(--green)'};">${r.aipd_requise?'⚠ Requise':'✓ Non'}</div></div>
+    </div></div>
+    <div class="rgpd-g">
+      <div class="rc" style="grid-column:1/-1"><div class="rc-t">⚖️ Base légale</div><div class="rc-c">${r.base_legale}</div></div>
+      <div class="rc"><div class="rc-t">📋 Données collectées</div><div class="rc-c">${r.donnees_collectees.map(d=>'• '+d).join('<br>')}</div></div>
+      <div class="rc"><div class="rc-t">🛡️ Mesures requises</div><div class="rc-c">${r.mesures_requises.map(m=>'• '+m).join('<br>')}</div></div>
+      <div class="rc" style="grid-column:1/-1"><div class="rc-t">💡 Recommandation</div><div class="rc-c">${r.recommandation}</div></div>
+    </div>`;}
+
+function tendances(ts){const cl=f=>f==='FORTE'?'f-forte':f==='MONTANTE'?'f-montante':'f-stable';
+  document.getElementById('c-tendances').innerHTML=`<div style="padding-top:14px;">${ts.map(t=>`
+    <div class="tnd"><div class="tnd-ic">${t.icone}</div><div class="tnd-in">
+      <div class="tnd-n">${t.nom}</div><div class="tnd-d">${t.description}</div>
+      <div class="tnd-a">↳ ${t.alignement}</div></div><div class="tnd-f ${cl(t.force)}">${t.force}</div></div>`).join('')}</div>`;}
+
+function concurrence(lignes){const cols=['Faisabilité','RGPD','Innovation','Prix','IA'],cles=['faisabilite','rgpd','innovation','prix','ia'];
+  const pil=v=>v==='✓'?'<span class="dp d-o">✓</span>':v==='✗'?'<span class="dp d-n">✗</span>':'<span class="dp d-p">~</span>';
+  document.getElementById('c-concurrence').innerHTML=`<div class="tw"><table>
+    <thead><tr><th>Acteur</th><th>Positionnement</th>${cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody>${lignes.map((l,i)=>`<tr ${i===0?'style="background:rgba(0,212,255,.04)"':''}>
+      <td style="font-weight:600;color:${i===0?'var(--cyan)':'var(--text)'};">${l.acteur}</td>
+      <td style="font-size:12px;color:var(--muted);">${l.positionnement}</td>
+      ${cles.map(k=>`<td>${pil(l[k])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;}
+
+function mvp(m){document.getElementById('c-mvp').innerHTML=`<div class="mvp">
+    <div class="mvp-desc">${m.description}</div>
+    <div class="code-box">
+      <div class="code-h"><span class="code-lang">${m.langage}</span>
+        <span class="code-copy" onclick="copierCode(this)">📋 Copier</span></div>
+      <div class="code-body" id="codeBody">${escapeHtml(m.code)}</div>
+    </div>
+    <div class="code-stack">${m.stack.map(s=>`<span class="tag">${s}</span>`).join('')}</div>
+  </div>`;}
+
+function financier(f){document.getElementById('c-financier').innerHTML=`<div class="fin">
+    <div class="fin-y">
+      <div class="fin-yc"><div class="fin-yl">An 1</div><div class="fin-yv" style="color:var(--green)">${f.annee1_revenus}</div></div>
+      <div class="fin-yc"><div class="fin-yl">An 2</div><div class="fin-yv" style="color:var(--cyan)">${f.annee2_revenus}</div></div>
+      <div class="fin-yc"><div class="fin-yl">An 3</div><div class="fin-yv" style="color:var(--violet)">${f.annee3_revenus}</div></div>
+    </div>
+    <div class="fin-g">
+      <div class="fin-c"><div class="fin-cl">💡 Modèle</div><div class="fin-cv">${f.modele_monetisation}</div></div>
+      <div class="fin-c"><div class="fin-cl">💳 Prix moyen</div><div class="fin-cv" style="color:var(--cyan)">${f.prix_moyen}</div></div>
+      <div class="fin-c"><div class="fin-cl">🌍 TAM / SAM</div><div class="fin-cv">${f.tam}\n${f.sam}</div></div>
+      <div class="fin-c"><div class="fin-cl">⏱ Seuil rentabilité</div><div class="fin-cv" style="color:var(--amber)">${f.seuil_rentabilite}</div></div>
+      <div class="fin-c"><div class="fin-cl">🔧 Infra/mois</div><div class="fin-cv">${f.cout_infra_mensuel}</div></div>
+      <div class="fin-c"><div class="fin-cl">💰 Investissement</div><div class="fin-cv" style="color:var(--green)">${f.investissement_initial}</div></div>
+      <div class="fin-c" style="grid-column:1/-1;background:rgba(0,232,122,.06);border-color:rgba(0,232,122,.15);display:flex;align-items:center;justify-content:space-between;">
+        <div class="fin-cl" style="margin:0">ROI projeté (3 ans)</div>
+        <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--green);">${f.roi_projete}</div></div>
+    </div>
+    <div class="fin-c"><div class="fin-cl">Analyse financière</div><div class="fin-cv" style="color:#AAB4CC;line-height:1.7;">${f.details}</div></div>
+
+    ${f.scenarios?`
+    <div class="sect-t" style="margin:8px 0 4px;">Scénarios (revenus an 3)</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px;">
+      <div style="padding:14px;background:rgba(255,77,109,.05);border:1px solid rgba(255,77,109,.15);border-radius:9px;">
+        <div style="font-size:10px;color:var(--red);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">😟 Pessimiste · ${f.scenarios.pessimiste.probabilite}</div>
+        <div style="font-family:'Space Grotesk';font-size:16px;font-weight:700;color:var(--red);margin-bottom:6px;">${f.scenarios.pessimiste.revenus_an3}</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">${f.scenarios.pessimiste.hypothese}</div></div>
+      <div style="padding:14px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-radius:9px;">
+        <div style="font-size:10px;color:var(--cyan);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">😐 Réaliste · ${f.scenarios.realiste.probabilite}</div>
+        <div style="font-family:'Space Grotesk';font-size:16px;font-weight:700;color:var(--cyan);margin-bottom:6px;">${f.scenarios.realiste.revenus_an3}</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">${f.scenarios.realiste.hypothese}</div></div>
+      <div style="padding:14px;background:rgba(0,232,122,.05);border:1px solid rgba(0,232,122,.15);border-radius:9px;">
+        <div style="font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px;">😀 Optimiste · ${f.scenarios.optimiste.probabilite}</div>
+        <div style="font-family:'Space Grotesk';font-size:16px;font-weight:700;color:var(--green);margin-bottom:6px;">${f.scenarios.optimiste.revenus_an3}</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">${f.scenarios.optimiste.hypothese}</div></div>
+    </div>`:''}
+
+    ${f.couts_postes?`
+    <div class="sect-t" style="margin:8px 0 4px;">Coûts détaillés par poste (mensuel)</div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;overflow:hidden;">
+      ${f.couts_postes.map((c,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 15px;${i<f.couts_postes.length-1?'border-bottom:1px solid var(--border);':''}">
+        <span style="font-size:12px;color:#AAB4CC;">${c.poste}</span>
+        <span style="font-family:'JetBrains Mono';font-size:13px;color:var(--amber);">${c.montant_mensuel}</span></div>`).join('')}
+    </div>`:''}
+
+    ${f.hypotheses?`
+    <div class="sect-t" style="margin:8px 0 4px;">Hypothèses de calcul</div>
+    <div style="padding:14px;background:rgba(255,187,58,.04);border:1px solid rgba(255,187,58,.12);border-radius:9px;">
+      <div style="font-size:11px;color:var(--amber);margin-bottom:8px;">⚠️ Ces chiffres reposent sur les hypothèses suivantes — à valider par une vraie étude de marché :</div>
+      ${f.hypotheses.map(h=>`<div style="font-size:12px;color:#AAB4CC;line-height:1.6;padding-left:14px;position:relative;margin-bottom:4px;"><span style="position:absolute;left:0;opacity:.5;">▸</span>${h}</div>`).join('')}
+    </div>`:''}
+  </div>`;}
+
+/* ═══ PLAN D'ACTION 90 JOURS ═══ */
+function planAction(plan){
+  document.getElementById('c-plan').innerHTML=`
+    <div style="padding:18px;">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+        Feuille de route concrète pour passer de l'idée au lancement en 90 jours.</div>
+      <div style="position:relative;padding-left:8px;">
+        ${plan.map((etape,i)=>`
+          <div style="display:flex;gap:14px;margin-bottom:${i<plan.length-1?'18px':'0'};position:relative;">
+            <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;">
+              <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--violet),var(--cyan));
+                display:flex;align-items:center;justify-content:center;font-family:'Space Grotesk';font-weight:700;font-size:13px;color:#fff;">${i+1}</div>
+              ${i<plan.length-1?'<div style="width:2px;flex:1;background:var(--border);margin-top:4px;min-height:30px;"></div>':''}
+            </div>
+            <div style="flex:1;padding-bottom:4px;">
+              <div style="font-family:'JetBrains Mono';font-size:11px;color:var(--cyan);margin-bottom:4px;">${etape.periode}</div>
+              <div style="font-size:13px;color:var(--text);line-height:1.6;margin-bottom:6px;">${etape.action}</div>
+              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:rgba(0,232,122,.06);
+                border:1px solid rgba(0,232,122,.15);border-radius:6px;font-size:11px;color:var(--green);">
+                🎯 ${etape.livrable}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+/* ═══ GRAPHIQUE D'ÉVOLUTION DES SCORES ═══ */
+function evolution(){
+  const el=document.getElementById('c-evolution');
+  if(E.versions.length<2){
+    el.innerHTML=`<div class="vide"><div class="vide-ic">📉</div><div class="vide-t">Pas encore de courbe</div>
+      <div class="vide-d">Génère au moins 2 versions pour visualiser la progression des scores.</div></div>`;
+    return;
+  }
+  // On prend les versions dans l'ordre chronologique (les plus anciennes d'abord)
+  const vers=[...E.versions].reverse();
+  const series=[
+    {nom:'Global',cle:'global',c:'#00D4FF'},
+    {nom:'Faisabilité',cle:'faisabilite',c:'#7B2FFF'},
+    {nom:'Rentabilité',cle:'rentabilite',c:'#00E87A'},
+    {nom:'Originalité',cle:'originalite',c:'#FFBB3A'},
+  ];
+  const W=Math.max(400,vers.length*60),H=280,pad=40;
+  const x=i=>pad+(i*(W-2*pad)/(vers.length-1));
+  const y=v=>H-pad-(v/100*(H-2*pad));
+  let svg=`<svg width="100%" viewBox="0 0 ${W} ${H}" style="max-width:100%;">`;
+  // grille horizontale
+  [0,25,50,75,100].forEach(v=>{
+    svg+=`<line x1="${pad}" y1="${y(v)}" x2="${W-pad}" y2="${y(v)}" stroke="rgba(255,255,255,.05)"/>
+      <text x="${pad-8}" y="${y(v)+4}" fill="var(--muted)" font-size="10" text-anchor="end">${v}</text>`;
+  });
+  // courbes
+  series.forEach(s=>{
+    const pts=vers.map((vr,i)=>`${x(i)},${y(vr.data.scores[s.cle])}`).join(' ');
+    svg+=`<polyline points="${pts}" fill="none" stroke="${s.c}" stroke-width="2"/>`;
+    vers.forEach((vr,i)=>{svg+=`<circle cx="${x(i)}" cy="${y(vr.data.scores[s.cle])}" r="3" fill="${s.c}"/>`;});
+  });
+  // labels x
+  vers.forEach((vr,i)=>{svg+=`<text x="${x(i)}" y="${H-pad+18}" fill="var(--muted)" font-size="10" text-anchor="middle">${vr.id}</text>`;});
+  svg+=`</svg>`;
+
+  const legende=series.map(s=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#AAB4CC;">
+    <span style="width:10px;height:3px;background:${s.c};border-radius:2px;"></span>${s.nom}</span>`).join('');
+
+  // tendance globale
+  const premier=vers[0].data.scores.global,dernier=vers[vers.length-1].data.scores.global;
+  const delta=dernier-premier;
+  const tendance=delta>0?`📈 +${delta} pts depuis le début`:delta<0?`📉 ${delta} pts depuis le début`:'➡️ stable';
+  const tcol=delta>0?'var(--green)':delta<0?'var(--red)':'var(--muted)';
+
+  el.innerHTML=`<div style="padding:18px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;">${legende}</div>
+      <div style="font-size:13px;font-weight:600;color:${tcol};">${tendance}</div>
+    </div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:10px;overflow-x:auto;">${svg}</div>
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.6;">
+      Chaque point = une version générée. Plus la courbe monte, plus NEXUS affine et améliore ses projets au fil des cycles.</div>
+  </div>`;
+}
+
+/* ═══ REPORTING BOURSIER (Finnhub, mode gratuit sécurisé) ═══ */
+// GARDE-FOU : on plafonne à 50 appels/jour pour ne JAMAIS franchir le palier payant.
+// Finnhub gratuit = 60 appels/minute. On reste très en dessous + cache 1h.
+const BOURSE_LIMITE_JOUR=50;
+
+function bourseQuota(){
+  const auj=new Date().toISOString().split('T')[0];
+  let q=JSON.parse(localStorage.getItem('nexus3_quota')||'{}');
+  if(q.date!==auj)q={date:auj,count:0}; // reset chaque jour
+  return q;
+}
+function bourseIncr(n){
+  const q=bourseQuota();q.count+=n;
+  localStorage.setItem('nexus3_quota',JSON.stringify(q));
+  return q.count;
+}
+
+async function bourse(b){
+  const el=document.getElementById('c-bourse');
+  const cle=localStorage.getItem('nexus3_bourse');
+
+  // Si pas de clé : on affiche quand même l'analyse qualitative de l'IA
+  const entete=`
+    <div style="padding:18px 18px 0;">
+      <div style="display:flex;align-items:center;gap:14px;padding:15px;background:rgba(0,0,0,.2);border:1px solid var(--border);border-radius:11px;margin-bottom:14px;">
+        <div style="font-size:30px;">📈</div>
+        <div style="flex:1;"><div style="font-size:11px;color:var(--muted);">Signal d'investissement du secteur</div>
+          <div style="font-size:18px;font-weight:700;font-family:'Space Grotesk';color:${b.signal==='HAUSSE'?'var(--green)':b.signal==='BAISSE'?'var(--red)':'var(--amber)'};">
+            ${b.signal==='HAUSSE'?'📈 '+b.signal:b.signal==='BAISSE'?'📉 '+b.signal:'➡️ '+b.signal}</div></div>
+      </div>
+      <div class="rc" style="margin-bottom:10px;"><div class="rc-t">🌍 Contexte de marché</div><div class="rc-c">${b.contexte_marche}</div></div>
+      <div class="rc" style="margin-bottom:14px;"><div class="rc-t">💰 Tendance d'investissement (levées de fonds, capital-risque)</div><div class="rc-c">${b.tendance_investissement}</div></div>
+    </div>`;
+
+  if(!cle){
+    el.innerHTML=entete+`
+      <div style="padding:0 18px 18px;">
+        <div style="padding:14px;background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.12);border-radius:9px;text-align:center;">
+          <div style="font-size:13px;color:#8ECFDF;line-height:1.6;">💡 Pour voir les <strong>cours réels</strong> des concurrents cotés (${(b.tickers_concurrents||[]).map(t=>t.symbole).join(', ')}),
+          ajoute ta clé Finnhub gratuite dans ⚙️.</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // Vérif du quota AVANT tout appel
+  const q=bourseQuota();
+  const tickers=(b.tickers_concurrents||[]).slice(0,4); // max 4 pour économiser
+  if(q.count+tickers.length>BOURSE_LIMITE_JOUR){
+    el.innerHTML=entete+`<div style="padding:0 18px 18px;"><div style="padding:14px;background:rgba(255,187,58,.06);border:1px solid rgba(255,187,58,.15);border-radius:9px;font-size:13px;color:var(--amber);">
+      ⚠ Limite quotidienne gratuite atteinte (${q.count}/${BOURSE_LIMITE_JOUR} appels). Les cours reviendront demain. Tu restes 100% dans le gratuit.</div></div>`;
+    return;
+  }
+
+  el.innerHTML=entete+`<div style="padding:0 18px 18px;"><div style="font-size:12px;color:var(--muted);">⏳ Chargement des cours réels…</div></div>`;
+
+  // Récupération des cours (avec cache 1h pour économiser les appels)
+  const cache=JSON.parse(localStorage.getItem('nexus3_coursCache')||'{}');
+  const maintenant=Date.now();
+  const resultats=[];
+  for(const t of tickers){
+    const c=cache[t.symbole];
+    if(c && (maintenant-c.ts)<3600000){ // cache valide 1h
+      resultats.push({...t,...c.data,cache:true});
+    }else{
+      try{
+        const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(t.symbole)}&token=${cle}`);
+        bourseIncr(1);
+        const d=await r.json();
+        const data={prix:d.c,variation:d.dp,haut:d.h,bas:d.l};
+        cache[t.symbole]={ts:maintenant,data};
+        resultats.push({...t,...data,cache:false});
+      }catch(e){resultats.push({...t,erreur:true});}
+    }
+  }
+  localStorage.setItem('nexus3_coursCache',JSON.stringify(cache));
+  const quotaFinal=bourseQuota();
+
+  // Affichage des cartes de cours
+  const cartes=resultats.map(r=>{
+    if(r.erreur)return `<div class="fin-c"><div class="fin-cl">${r.nom}</div><div style="font-size:12px;color:var(--muted);">${r.symbole} — données indisponibles</div></div>`;
+    const col=r.variation>0?'var(--green)':r.variation<0?'var(--red)':'var(--muted)';
+    const fleche=r.variation>0?'▲':r.variation<0?'▼':'■';
+    return `<div class="fin-c">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;">
+        <div class="fin-cl" style="margin:0;">${r.nom}</div>
+        <span style="font-family:'JetBrains Mono';font-size:10px;color:var(--muted);">${r.symbole}</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px;">
+        <span style="font-family:'Space Grotesk';font-size:18px;font-weight:700;">${r.prix?r.prix.toFixed(2):'—'}</span>
+        <span style="font-size:13px;font-weight:600;color:${col};">${fleche} ${r.variation?r.variation.toFixed(2):'0'}%</span>
+      </div>
+      ${r.cache?'<div style="font-size:9px;color:var(--muted);margin-top:3px;">⏱ en cache</div>':''}
+    </div>`;
+  }).join('');
+
+  el.innerHTML=entete+`
+    <div style="padding:0 18px 18px;">
+      <div class="sect-t" style="margin:4px 0 10px;">Concurrents cotés — cours du jour</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">${cartes}</div>
+      <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);">
+        <span>📊 Données Finnhub</span>
+        <span>Quota gratuit : ${quotaFinal.count}/${BOURSE_LIMITE_JOUR} appels aujourd'hui</span>
+      </div>
+    </div>`;
+}
+
+/* ═══ UTILITAIRES CODE ═══ */
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function copierCode(el){const code=document.getElementById('codeBody').textContent;
+  navigator.clipboard.writeText(code).then(()=>{el.textContent='✓ Copié';setTimeout(()=>el.textContent='📋 Copier',1500);});}
+
+/* ═══ VERSIONS ═══ */
+function sauverVersion(d,secteurImpose,idee){
+  const n=new Date();
+  const ho=n.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const id=`v${String(++E.compteur).padStart(3,'0')}`;
+  const v={id,horodatage:ho,data:d,secteurImpose,idee,score:d.scores.global};
+  E.versions.unshift(v);E.actuelle=v;sauverNav();afficherV();majDashboard();return v;}
+
+function afficherV(){const l=document.getElementById('listeV');
+  document.getElementById('nbV').textContent=`${E.versions.length} v.`;
+  if(!E.versions.length){l.innerHTML='<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6;">Chaque cycle est sauvegardé ici<br>avec sa date et son score.</div>';return;}
+  l.innerHTML=E.versions.map((v,i)=>{const c=v.score>=75?'s-h':v.score>=55?'s-m':'s-b';
+    return`<div class="vi ${i===0?'on':''}" onclick="chargerV(${i})"><div class="vi-ic">📌</div>
+      <div class="vi-in"><div class="vi-n">${v.data.projet.nom}</div><div class="vi-ts">${v.id} · ${v.horodatage}</div></div>
+      <span class="vi-sc ${c}">${v.score}</span></div>`;}).join('');}
+
+function chargerV(i){E.actuelle=E.versions[i];afficherTout(E.actuelle.data);
+  log('info',`Version ${E.actuelle.id} rechargée — "${E.actuelle.data.projet.nom}"`);
+  document.querySelectorAll('.vi').forEach((e,j)=>e.classList.toggle('on',j===i));}
+
+function exporter(){if(!E.versions.length){toast('Rien à exporter','err');return;}
+  const b=new Blob([JSON.stringify(E.versions,null,2)],{type:'application/json'});
+  const u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download=`nexus-${new Date().toISOString().split('T')[0]}.json`;a.click();URL.revokeObjectURL(u);
+  toast(`${E.versions.length} version(s) exportée(s)`,'ok');}
+
+/* ═══ CHRONOMÈTRE DE GÉNÉRATION ═══ */
+function demarrerChrono(){
+  E.chronoDebut=Date.now();
+  const el=document.getElementById('chronoLive');
+  E.chrono=setInterval(()=>{
+    const s=((Date.now()-E.chronoDebut)/1000).toFixed(1);
+    el.textContent=`⏱ ${s}s`;
+    el.style.color='var(--cyan)';
+  },100);
+}
+function arreterChrono(){
+  if(E.chrono){clearInterval(E.chrono);E.chrono=null;}
+  const duree=Date.now()-E.chronoDebut;
+  const el=document.getElementById('chronoLive');
+  el.textContent=`✓ ${(duree/1000).toFixed(1)}s`;
+  el.style.color='var(--green)';
+  return duree;
+}
+
+/* ═══ JINGLE DE FIN (Web Audio — aucun fichier requis) ═══ */
+// Génère un petit carillon synthétisé, façon "bip de fin de cycle".
+function jouerJingle(type){
+  if(!document.getElementById('sonOn').checked)return;
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    if(type==='succes'){
+      // Mélodie ascendante joyeuse : do - mi - sol - do aigu (façon machine à laver)
+      const notes=[523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+      notes.forEach((freq,i)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='sine';o.frequency.value=freq;
+        o.connect(g);g.connect(ctx.destination);
+        const t=ctx.currentTime+i*0.15;
+        g.gain.setValueAtTime(0,t);
+        g.gain.linearRampToValueAtTime(0.25,t+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,t+0.4);
+        o.start(t);o.stop(t+0.4);
+      });
+      // Petit "ding" final qui résonne
+      setTimeout(()=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='sine';o.frequency.value=1318.51; // E6
+        o.connect(g);g.connect(ctx.destination);
+        const t=ctx.currentTime;
+        g.gain.setValueAtTime(0.2,t);
+        g.gain.exponentialRampToValueAtTime(0.001,t+0.8);
+        o.start(t);o.stop(t+0.8);
+      },600);
+    }else{
+      // Erreur : deux notes descendantes discrètes
+      [440,330].forEach((freq,i)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type='triangle';o.frequency.value=freq;
+        o.connect(g);g.connect(ctx.destination);
+        const t=ctx.currentTime+i*0.18;
+        g.gain.setValueAtTime(0.15,t);
+        g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+        o.start(t);o.stop(t+0.3);
+      });
+    }
+  }catch(e){/* audio non dispo, on ignore silencieusement */}
+}
+
+/* ═══ TABLEAU DE BORD TEMPS RÉEL ═══ */
+function majDashboard(){
+  document.getElementById('dashProjets').textContent=E.versions.length;
+  document.getElementById('dashTokens').textContent=formatNombre(E.tokensCumul);
+  document.getElementById('dashCout').textContent=E.coutCumul.toFixed(2).replace('.',',')+' €';
+  // Temps moyen
+  if(E.versions.length>0&&E.tempsTotal>0){
+    const moy=(E.tempsTotal/E.versions.length/1000).toFixed(1);
+    document.getElementById('dashTemps').textContent=moy+'s';
+  }
+  // Meilleur score
+  if(E.versions.length>0){
+    const best=E.versions.reduce((a,b)=>b.score>a.score?b:a);
+    document.getElementById('dashMeilleur').textContent=best.score+'/100';
+    document.getElementById('dashMeilleurNom').textContent='— '+best.data.projet.nom;
+  }
+  // Persistance
+  localStorage.setItem('nexus2_tokens',String(E.tokensCumul));
+  localStorage.setItem('nexus2_temps',String(E.tempsTotal));
+}
+function formatNombre(n){
+  if(n>=1e6)return (n/1e6).toFixed(2)+'M';
+  if(n>=1e3)return (n/1e3).toFixed(1)+'k';
+  return String(n);
+}
+
+const pause=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ═══ COMPARAISON DE VERSIONS ═══ */
+function ouvrirComparaison(){
+  if(E.versions.length<2){toast('Il faut au moins 2 versions à comparer','err');return;}
+  const opts=E.versions.map((v,i)=>`<option value="${i}">${v.id} — ${v.data.projet.nom} (${v.score}/100)</option>`).join('');
+  document.getElementById('compA').innerHTML=opts;
+  document.getElementById('compB').innerHTML=opts;
+  document.getElementById('compB').selectedIndex=Math.min(1,E.versions.length-1);
+  document.getElementById('overlayComp').classList.add('on');
+  rendreComparaison();
+}
+function fermerComparaison(){document.getElementById('overlayComp').classList.remove('on');}
+document.getElementById('overlayComp').addEventListener('click',e=>{if(e.target.id==='overlayComp')fermerComparaison();});
+
+function rendreComparaison(){
+  const a=E.versions[+document.getElementById('compA').value];
+  const b=E.versions[+document.getElementById('compB').value];
+  if(!a||!b)return;
+  const dims=[['Global','global'],['Faisabilité','faisabilite'],['Rentabilité','rentabilite'],
+    ['Originalité','originalite'],['RGPD','rgpd'],['Timing','timing_marche']];
+  const ligne=(label,cle)=>{
+    const va=a.data.scores[cle]??0, vb=b.data.scores[cle]??0, d=vb-va;
+    const col=d>0?'var(--green)':d<0?'var(--red)':'var(--muted)';
+    const fl=d>0?'▲ +'+d:d<0?'▼ '+d:'=';
+    return `<tr>
+      <td style="font-size:12px;color:#AAB4CC;">${label}</td>
+      <td style="text-align:center;font-family:'JetBrains Mono';font-size:13px;">${va}</td>
+      <td style="text-align:center;font-family:'JetBrains Mono';font-size:13px;">${vb}</td>
+      <td style="text-align:center;font-family:'JetBrains Mono';font-size:12px;color:${col};font-weight:600;">${fl}</td>
+    </tr>`;
+  };
+  document.getElementById('compResultat').innerHTML=`
+    <table style="width:100%;border-collapse:collapse;">
+      <thead><tr>
+        <th style="text-align:left;font-size:10px;color:var(--muted);text-transform:uppercase;padding:8px;border-bottom:1px solid var(--border);">Critère</th>
+        <th style="font-size:10px;color:var(--cyan);padding:8px;border-bottom:1px solid var(--border);">${a.id}</th>
+        <th style="font-size:10px;color:var(--violet);padding:8px;border-bottom:1px solid var(--border);">${b.id}</th>
+        <th style="font-size:10px;color:var(--muted);text-transform:uppercase;padding:8px;border-bottom:1px solid var(--border);">Écart</th>
+      </tr></thead>
+      <tbody>${dims.map(([l,c])=>ligne(l,c)).join('')}</tbody>
+    </table>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
+      <div style="padding:13px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.15);border-radius:9px;">
+        <div style="font-size:11px;color:var(--cyan);font-weight:600;margin-bottom:5px;">${a.id} · ${a.data.projet.nom}</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">${a.data.projet.secteur}<br>${a.horodatage}</div>
+      </div>
+      <div style="padding:13px;background:rgba(123,47,255,.05);border:1px solid rgba(123,47,255,.15);border-radius:9px;">
+        <div style="font-size:11px;color:var(--violet);font-weight:600;margin-bottom:5px;">${b.id} · ${b.data.projet.nom}</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.5;">${b.data.projet.secteur}<br>${b.horodatage}</div>
+      </div>
+    </div>`;
+}
+
+/* ═══ FILET DE SÉCURITÉ JSON ═══ */
+// Tente plusieurs stratégies de réparation avant d'abandonner.
+function parserJSONrobuste(brut){
+  if(!brut)return null;
+  // Stratégie 1 : nettoyage simple (backticks, espaces)
+  let t=brut.replace(/```json/gi,'').replace(/```/g,'').trim();
+  try{return JSON.parse(t);}catch(e){}
+
+  // Stratégie 2 : extraire le bloc { ... } le plus large
+  const m=t.match(/\{[\s\S]*\}/);
+  if(m){
+    try{return JSON.parse(m[0]);}catch(e){}
+    // Stratégie 3 : réparations courantes sur ce bloc
+    let r=m[0];
+    r=r.replace(/,\s*}/g,'}').replace(/,\s*]/g,']'); // virgules traînantes
+    r=r.replace(/}\s*{/g,'},{');                      // accolades collées
+    r=r.replace(/]\s*\[/g,'],[');
+    // guillemets « intelligents » → guillemets droits
+    r=r.replace(/[\u201C\u201D]/g,'"').replace(/[\u2018\u2019]/g,"'");
+    try{const o=JSON.parse(r);o._repare=true;return o;}catch(e){}
+
+    // Stratégie 4 : tronquer au dernier objet complet (réponse coupée)
+    let prof=0,dernierOK=-1;
+    for(let i=0;i<r.length;i++){
+      if(r[i]==='{')prof++;
+      else if(r[i]==='}'){prof--;if(prof===0)dernierOK=i;}
+    }
+    if(dernierOK>0){
+      try{const o=JSON.parse(r.slice(0,dernierOK+1));o._repare=true;return o;}catch(e){}
+    }
+  }
+  return null; // échec total
+}
+
+/* ═══ VALIDATION DE COHÉRENCE ═══ */
+// Repère les incohérences sans bloquer l'affichage.
+function validerCoherence(R){
+  const a=[];
+  try{
+    // Scores hors bornes
+    if(R.scores){
+      for(const[k,v]of Object.entries(R.scores)){
+        if(typeof v==='number'&&(v<0||v>100))a.push(`Score ${k} hors limites (${v})`);
+      }
+    }
+    // Champs essentiels manquants
+    if(!R.projet||!R.projet.nom)a.push('Nom de projet manquant');
+    if(!R.scores||R.scores.global===undefined)a.push('Score global manquant');
+    // Cohérence financière basique : revenus croissants attendus
+    const f=R.financier;
+    if(f){
+      const n=s=>parseFloat(String(s).replace(/[^0-9.,]/g,'').replace(',','.'))||0;
+      const a1=n(f.annee1_revenus),a3=n(f.annee3_revenus);
+      if(a1>0&&a3>0&&a3<a1)a.push('Revenus an 3 inférieurs à l\'an 1 (à vérifier)');
+    }
+  }catch(e){}
+  return a;
+}
+
+/* ═══ COMPTEUR DE COÛT ═══ */
+function majCout(){
+  document.getElementById('coutTotal').textContent=E.coutCumul.toFixed(2).replace('.',',')+' €';
+  // Alerte visuelle si le coût grimpe
+  const badge=document.getElementById('badgeCout');
+  if(E.coutCumul>=5){badge.style.background='rgba(255,77,109,.1)';badge.style.borderColor='rgba(255,77,109,.3)';badge.style.color='var(--red)';}
+  localStorage.setItem('nexus2_cout',String(E.coutCumul));
+}
+function resetCout(){
+  if(confirm('Remettre le compteur de coût à zéro ?\n\n(Cela n\'efface PAS tes dépenses réelles chez Anthropic, seulement l\'estimation affichée ici.)')){
+    E.coutCumul=0;majCout();
+    const badge=document.getElementById('badgeCout');
+    badge.style.background='rgba(255,187,58,.08)';badge.style.borderColor='rgba(255,187,58,.18)';badge.style.color='var(--amber)';
+    toast('Compteur de coût remis à zéro','ok');
+  }
+}
+
+/* ═══ DÉMARRAGE ═══ */
+charger();
+window.addEventListener('load',()=>{
+  if(!localStorage.getItem('nexus2_cle')){
+    setTimeout(()=>{log('warn','Aucune clé API — clique sur ⚙️ pour la configurer');ouvrirCfg();},800);
+  }else log('ok','Clé API trouvée — prêt à analyser !');
+});
+</script>
+<!-- ═══ PWA — Service Worker & Installation ═══ -->
+<script>
+// Enregistrement du service worker pour l'installation PWA
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('nexus-sw.js')
+    .then(()=>console.log('NEXUS SW enregistré'))
+    .catch(e=>console.log('SW non disponible (mode local) :',e.message));
+}
+
+// Bouton d'installation PWA — apparaît automatiquement si Chrome le propose
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  document.getElementById('btnInstall').style.display='flex';
+});
+
+window.addEventListener('appinstalled',()=>{
+  document.getElementById('btnInstall').style.display='none';
+  document.getElementById('btnInstall').textContent='✓ Installée';
+});
+
+function installerApp(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(r=>{
+      if(r.outcome==='accepted'){
+        document.getElementById('btnInstall').style.display='none';
+      }
+      deferredPrompt=null;
+    });
+  }else{
+    // Fallback : guide manuel
+    alert('Pour installer NEXUS :\n\n1. Tape sur les ⋮ (trois points) en haut à droite de Chrome\n2. Sélectionne "Ajouter à l\'écran d\'accueil"\n3. Confirme → NEXUS apparaît sur ton écran comme une app !');
+  }
+}
+</script>
+</body>
+</html>
