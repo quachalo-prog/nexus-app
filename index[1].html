@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>NEXUS Mobile</title>
+
+<meta name="theme-color" content="#0A0613">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%237B2FFF'/><text y='.9em' font-size='55' font-family='sans-serif' font-weight='700' fill='white' x='50' text-anchor='middle' dy='5'>N</text></svg>">
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════════════════
+   NEXUS MOBILE — conçu pour Pixel 8a (et tout Android)
+   Navigation tactile par le bas, écrans verticaux.
+   Pour changer le mot de passe : voir const MDP plus bas.
+   ═══════════════════════════════════════════════════ */
+
+:root{
+  --bg:#0A0613;
+  --bg2:#130D24;
+  --surface:#1A1230;
+  --surface2:#241838;
+  --line:rgba(255,255,255,0.08);
+  --violet:#9D5CFF;
+  --violet-d:#7B2FFF;
+  --cyan:#2DD4FF;
+  --green:#34E89E;
+  --red:#FF5C7C;
+  --amber:#FFC24B;
+  --text:#ECE8F5;
+  --muted:#8A82A8;
+  --dim:#5A5378;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+html,body{
+  overflow-x:hidden;
+  overflow-y:auto;
+  width:100%;
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
+}
+
+body{
+  min-height:100vh;
+  min-height:100dvh;
+  padding-bottom:calc(72px + env(safe-area-inset-bottom));
+  padding-top:env(safe-area-inset-top);
+}
+
+/* halo d'ambiance */
+body::before{
+  content:'';position:fixed;
+  top:-10%;left:50%;transform:translateX(-50%);
+  width:140%;height:40%;
+  background:radial-gradient(ellipse,rgba(157,92,255,0.12) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+
+/* ═══ ÉCRAN LOGIN ═══ */
+#login{
+  position:fixed;inset:0;z-index:1000;
+  background:var(--bg);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  gap:24px;padding:32px;
+}
+.login-logo{
+  width:64px;height:64px;border-radius:18px;
+  background:linear-gradient(135deg,var(--violet-d),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:26px;color:#fff;
+  box-shadow:0 8px 32px rgba(123,47,255,0.4);
+}
+.login-titre{
+  font-family:'Space Grotesk';font-size:26px;font-weight:700;
+  background:linear-gradient(90deg,#fff,var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.login-sous{font-size:13px;color:var(--muted);margin-top:-12px;}
+.login-form{width:100%;max-width:300px;display:flex;flex-direction:column;gap:12px;}
+.login-input{
+  width:100%;padding:16px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;color:var(--text);
+  font-size:16px;text-align:center;letter-spacing:3px;
+  outline:none;
+}
+.login-input:focus{border-color:var(--violet);}
+.login-btn{
+  width:100%;padding:16px;
+  background:linear-gradient(135deg,var(--violet-d),var(--violet));
+  border:none;border-radius:14px;color:#fff;
+  font-family:'Space Grotesk';font-size:16px;font-weight:600;
+  cursor:pointer;
+}
+.login-btn:active{transform:scale(0.98);}
+.login-err{font-size:13px;color:var(--red);text-align:center;display:none;}
+
+/* ═══ HEADER ═══ */
+.header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,6,19,0.85);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--line);
+  padding:14px 18px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.h-left{display:flex;align-items:center;gap:10px;}
+.h-logo{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(135deg,var(--violet-d),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:15px;color:#fff;
+  position:relative;
+}
+.h-logo::after{
+  content:'';position:absolute;width:8px;height:8px;
+  background:var(--green);border-radius:50%;top:-2px;right:-2px;
+  border:2px solid var(--bg);
+}
+.h-titre{font-family:'Space Grotesk';font-size:18px;font-weight:700;}
+.h-cout{
+  font-family:'JetBrains Mono';font-size:12px;
+  color:var(--amber);
+  background:rgba(255,194,75,0.1);
+  padding:6px 12px;border-radius:20px;
+  border:1px solid rgba(255,194,75,0.2);
+}
+
+/* ═══ ÉCRANS ═══ */
+.ecran{
+  display:none;
+  position:relative;
+  z-index:1;
+  padding:18px;
+  animation:fadeIn .3s;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  min-height:calc(100vh - 130px);
+}
+.ecran.actif{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ═══ ÉCRAN ACCUEIL ═══ */
+.hero{
+  text-align:center;padding:24px 0 28px;
+}
+.hero-titre{
+  font-family:'Space Grotesk';font-size:26px;font-weight:700;line-height:1.2;
+  margin-bottom:8px;
+}
+.hero-titre span{
+  background:linear-gradient(90deg,var(--violet),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.hero-sous{font-size:14px;color:var(--muted);line-height:1.6;padding:0 10px;}
+
+.btn-go{
+  width:100%;padding:18px;margin-top:8px;
+  background:linear-gradient(135deg,var(--violet-d),var(--violet));
+  border:none;border-radius:16px;color:#fff;
+  font-family:'Space Grotesk';font-size:17px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  box-shadow:0 8px 24px rgba(123,47,255,0.3);
+}
+.btn-go:active{transform:scale(0.98);}
+.btn-go:disabled{opacity:0.5;}
+
+.bloc-titre{
+  font-size:12px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:1px;
+  margin:24px 0 12px;
+}
+
+/* secteurs en chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{
+  padding:10px 14px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;font-size:13px;color:var(--muted);
+  cursor:pointer;transition:all .15s;
+}
+.chip.on{
+  background:rgba(157,92,255,0.15);
+  border-color:var(--violet);color:#fff;
+}
+.chip:active{transform:scale(0.95);}
+
+.input-zone{
+  width:100%;margin-top:12px;padding:14px;
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;color:var(--text);font-family:'Inter';font-size:14px;
+  resize:none;outline:none;
+}
+.input-zone:focus{border-color:var(--violet);}
+
+/* ═══ CARTES DASHBOARD ═══ */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+.stat{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:14px;
+}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.stat-val{font-family:'Space Grotesk';font-size:22px;font-weight:700;margin-top:4px;}
+
+/* ═══ PROGRESS BARS (remplacent le radar) ═══ */
+.score-item{margin-bottom:14px;}
+.score-head{display:flex;justify-content:space-between;margin-bottom:6px;}
+.score-nom{font-size:14px;}
+.score-val{font-family:'JetBrains Mono';font-size:14px;font-weight:500;}
+.score-bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+.score-fill{height:100%;border-radius:4px;transition:width 1s ease;}
+
+/* ═══ CARTES PLIABLES ═══ */
+.carte{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;margin-bottom:12px;overflow:hidden;
+}
+.carte-head{
+  padding:16px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;
+  -webkit-tap-highlight-color:rgba(157,92,255,0.1);
+  touch-action:manipulation;
+}
+.carte-ic{
+  width:38px;height:38px;border-radius:11px;
+  background:var(--surface2);
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  flex-shrink:0;
+}
+.carte-t{flex:1;}
+.carte-nom{font-size:15px;font-weight:600;}
+.carte-sous{font-size:12px;color:var(--muted);margin-top:2px;}
+.carte-fleche{color:var(--muted);transition:transform .25s;font-size:18px;}
+.carte.ouvert .carte-fleche{transform:rotate(180deg);}
+.carte-corps{
+  max-height:0;overflow:hidden;
+  transition:max-height .3s ease;
+}
+.carte.ouvert .carte-corps{max-height:4000px;}
+.carte-inner{padding:0 16px 16px;font-size:14px;line-height:1.7;color:#C5BFD8;}
+
+.sous-titre{
+  font-size:12px;font-weight:600;color:var(--cyan);
+  text-transform:uppercase;letter-spacing:0.8px;
+  margin:16px 0 8px;
+}
+.sous-titre:first-child{margin-top:0;}
+
+.tag{
+  display:inline-block;padding:5px 12px;margin:3px;
+  background:rgba(157,92,255,0.15);border:1px solid rgba(157,92,255,0.25);
+  border-radius:20px;font-size:12px;color:#C9A8FF;
+}
+
+.liste-item{
+  display:flex;gap:8px;padding:8px 0;
+  border-bottom:1px solid var(--line);font-size:13px;
+}
+.liste-item:last-child{border:none;}
+
+/* SWOT mobile */
+.swot-bloc{
+  padding:12px;border-radius:12px;margin-bottom:8px;
+}
+.swot-f{background:rgba(52,232,158,0.06);border:1px solid rgba(52,232,158,0.15);}
+.swot-w{background:rgba(255,92,124,0.06);border:1px solid rgba(255,92,124,0.15);}
+.swot-o{background:rgba(45,212,255,0.06);border:1px solid rgba(45,212,255,0.15);}
+.swot-t{background:rgba(255,194,75,0.06);border:1px solid rgba(255,194,75,0.15);}
+.swot-h{font-size:13px;font-weight:600;margin-bottom:8px;}
+.swot-li{font-size:12px;color:#C5BFD8;padding:4px 0 4px 14px;position:relative;line-height:1.5;}
+.swot-li::before{content:'▸';position:absolute;left:0;opacity:0.5;}
+
+/* code MVP */
+.code-box{
+  background:#06040D;border:1px solid var(--line);
+  border-radius:12px;overflow:hidden;margin-top:8px;
+}
+.code-head{
+  padding:10px 14px;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--line);
+}
+.code-lang{font-family:'JetBrains Mono';font-size:11px;color:var(--cyan);}
+.code-copy{
+  font-size:11px;color:var(--muted);padding:4px 12px;
+  border:1px solid var(--line);border-radius:8px;cursor:pointer;
+}
+.code-body{
+  padding:14px;overflow-x:auto;
+  font-family:'JetBrains Mono';font-size:11px;line-height:1.6;
+  color:#C5D5E8;white-space:pre;max-height:340px;overflow-y:auto;
+}
+
+/* tableau financier en cartes */
+.fin-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 0;border-bottom:1px solid var(--line);
+}
+.fin-row:last-child{border:none;}
+.fin-lbl{font-size:13px;color:var(--muted);}
+.fin-val{font-family:'JetBrains Mono';font-size:14px;}
+
+/* scénarios */
+.scenario{padding:12px;border-radius:12px;margin-bottom:8px;}
+
+/* terminal */
+.term{
+  background:#06040D;border:1px solid var(--line);border-radius:12px;
+  padding:14px;font-family:'JetBrains Mono';font-size:11px;line-height:1.8;
+  max-height:300px;overflow-y:auto;
+}
+.t-ts{color:var(--dim);}
+.t-ok{color:var(--green);}.t-info{color:var(--cyan);}
+.t-warn{color:var(--amber);}.t-err{color:var(--red);}.t-sys{color:var(--violet);}
+
+/* versions */
+.version{
+  display:flex;align-items:center;gap:12px;
+  padding:14px;background:var(--surface);
+  border:1px solid var(--line);border-radius:14px;margin-bottom:10px;
+  cursor:pointer;
+}
+.version:active{transform:scale(0.98);}
+.v-score{
+  width:44px;height:44px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk';font-weight:700;font-size:16px;flex-shrink:0;
+}
+.v-info{flex:1;min-width:0;}
+.v-nom{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.v-date{font-size:11px;color:var(--muted);font-family:'JetBrains Mono';margin-top:2px;}
+
+/* ═══ BARRE NAVIGATION BAS ═══ */
+.navbar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(19,13,36,0.92);
+  backdrop-filter:blur(20px);
+  border-top:1px solid var(--line);
+  display:flex;
+  padding:8px 4px calc(8px + env(safe-area-inset-bottom));
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 0;background:none;border:none;cursor:pointer;
+  color:var(--dim);transition:color .15s;
+}
+.nav-btn.on{color:var(--violet);}
+.nav-ic{font-size:20px;}
+.nav-lbl{font-size:10px;font-weight:500;}
+
+/* loader */
+.loader{display:flex;align-items:center;justify-content:center;gap:6px;padding:40px;}
+.loader span{
+  width:8px;height:8px;border-radius:50%;background:var(--violet);
+  animation:bounce 1.2s infinite;
+}
+.loader span:nth-child(2){animation-delay:.15s;}
+.loader span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,80%,100%{transform:scale(.5);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+
+.vide{text-align:center;padding:50px 20px;color:var(--muted);}
+.vide-ic{font-size:40px;margin-bottom:14px;}
+.vide-t{font-size:16px;color:var(--text);margin-bottom:6px;}
+.vide-d{font-size:13px;line-height:1.6;}
+
+/* toast */
+.toast{
+  position:fixed;bottom:90px;left:18px;right:18px;z-index:200;
+  padding:14px;border-radius:12px;text-align:center;
+  font-size:14px;font-weight:500;color:#fff;
+  transform:translateY(20px);opacity:0;transition:.3s;pointer-events:none;
+}
+.toast.ok{background:var(--green);}
+.toast.err{background:var(--red);}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* modal config */
+.modal-bg{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
+  display:none;align-items:flex-end;
+}
+.modal-bg.on{display:flex;}
+.modal{
+  width:100%;background:var(--bg2);
+  border-radius:24px 24px 0 0;border-top:1px solid var(--line);
+  padding:24px 18px calc(24px + env(safe-area-inset-bottom));
+  animation:slideUp .3s;
+}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-poignee{width:40px;height:4px;background:var(--surface2);border-radius:2px;margin:0 auto 18px;}
+.modal-t{font-family:'Space Grotesk';font-size:18px;font-weight:700;margin-bottom:6px;}
+.modal-s{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.5;}
+.lbl{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;display:block;}
+.inp{
+  width:100%;padding:14px;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;color:var(--text);
+  font-family:'JetBrains Mono';font-size:14px;outline:none;margin-bottom:14px;
+}
+.inp:focus{border-color:var(--violet);}
+.aide{font-size:12px;color:var(--cyan);line-height:1.5;margin-bottom:14px;}
+.aide a{color:var(--cyan);}
+.toggle-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px;background:var(--surface);border:1px solid var(--line);
+  border-radius:12px;margin-bottom:12px;
+}
+.toggle-row span{font-size:13px;}
+.modal-save{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,var(--violet-d),var(--violet));
+  border:none;border-radius:12px;color:#fff;
+  font-family:'Space Grotesk';font-size:15px;font-weight:600;cursor:pointer;
+}
+
+::-webkit-scrollbar{width:0;height:0;}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login">
+  <div class="login-logo">NX</div>
+  <div class="login-titre">NEXUS</div>
+  <div class="login-sous">Mobile · accès privé</div>
+  <div class="login-form">
+    <input id="loginInput" class="login-input" type="password" placeholder="Mot de passe"
+      onkeydown="if(event.key==='Enter')checkMDP()">
+    <button class="login-btn" onclick="checkMDP()">Accéder →</button>
+    <div id="loginErr" class="login-err">Mot de passe incorrect</div>
+  </div>
+</div>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="h-left">
+    <div class="h-logo">NX</div>
+    <div class="h-titre">NEXUS</div>
+  </div>
+  <div class="h-cout" id="coutBadge" onclick="ouvrirConfig()">💶 0,00 €</div>
+</div>
+
+<!-- ═══ ÉCRAN : GÉNÉRER ═══ -->
+<div class="ecran actif" id="ec-generer">
+  <div class="hero">
+    <div class="hero-titre">Génère un <span>projet</span><br>en un tap</div>
+    <div class="hero-sous">NEXUS choisit un secteur porteur, l'analyse à fond et propose un projet complet avec code.</div>
+  </div>
+
+  <button class="btn-go" id="btnGo" onclick="lancer(false)">🚀 Lancer NEXUS</button>
+
+  <div class="bloc-titre">Ou impose un secteur</div>
+  <div class="chips" id="chips">
+    <div class="chip" onclick="toggleChip(this)">🤖 IA / Tech</div>
+    <div class="chip" onclick="toggleChip(this)">👴 Silver éco</div>
+    <div class="chip" onclick="toggleChip(this)">🌿 GreenTech</div>
+    <div class="chip" onclick="toggleChip(this)">🎓 EdTech</div>
+    <div class="chip" onclick="toggleChip(this)">💰 Fintech</div>
+    <div class="chip" onclick="toggleChip(this)">🏥 Santé</div>
+    <div class="chip" onclick="toggleChip(this)">🍃 FoodTech</div>
+    <div class="chip" onclick="toggleChip(this)">🔒 Cyber</div>
+  </div>
+  <textarea class="input-zone" id="idee" rows="2" placeholder="Une contrainte ou idée précise ? (optionnel)"></textarea>
+  <button class="btn-go" style="margin-top:12px;background:var(--surface);border:1px solid var(--violet);box-shadow:none;" onclick="lancer(true)">🎯 Lancer avec mon secteur</button>
+
+  <div class="bloc-titre">Bêta 1 · depuis le chat Claude</div>
+  <button class="btn-go" style="background:var(--surface);border:1px solid var(--cyan);box-shadow:none;color:var(--cyan);" onclick="ouvrirImport()">📥 Importer une analyse du chat</button>
+  <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:10px;text-align:center;padding:0 8px;">
+    Génère un projet gratuitement via le chat Claude (dis « lance nexus »), puis colle ici le code reçu pour l'archiver.
+  </div>
+</div>
+
+<!-- ═══ ÉCRAN : VITRINE / VENTE ═══ -->
+<div class="ecran" id="ec-vitrine">
+  <div class="hero" style="padding:20px 0 16px;">
+    <div class="hero-titre" style="font-size:22px;">Ma <span>vitrine</span></div>
+    <div class="hero-sous">Tes projets à valoriser ou vendre.</div>
+  </div>
+  <div class="stats" style="margin-bottom:18px;">
+    <div class="stat"><div class="stat-lbl">Projets en vitrine</div><div class="stat-val" style="color:var(--cyan)" id="vitProjets">0</div></div>
+    <div class="stat"><div class="stat-lbl">Valeur totale</div><div class="stat-val" style="color:var(--green)" id="vitValeur">0 €</div></div>
+  </div>
+  <div id="listeVitrine">
+    <div class="vide">
+      <div class="vide-ic">🏷️</div>
+      <div class="vide-t">Vitrine vide</div>
+      <div class="vide-d">Depuis un projet, tape « Mettre en vitrine » pour le proposer à la vente ici.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ÉCRAN : PROJET (résultat) ═══ -->
+<div class="ecran" id="ec-projet">
+  <div id="projetVide" class="vide">
+    <div class="vide-ic">💡</div>
+    <div class="vide-t">Pas encore de projet</div>
+    <div class="vide-d">Lance NEXUS pour voir apparaître ton premier projet analysé.</div>
+  </div>
+  <div id="projetContenu"></div>
+</div>
+
+<!-- ═══ ÉCRAN : HISTORIQUE ═══ -->
+<div class="ecran" id="ec-historique">
+  <div class="bloc-titre" style="margin-top:8px;">Projets sauvegardés</div>
+  <div id="listeVersions">
+    <div class="vide">
+      <div class="vide-ic">📌</div>
+      <div class="vide-t">Aucun projet sauvegardé</div>
+      <div class="vide-d">Tes projets générés s'accumulent ici, horodatés.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ÉCRAN : TERMINAL ═══ -->
+<div class="ecran" id="ec-terminal">
+  <div class="bloc-titre" style="margin-top:8px;">Journal d'activité</div>
+  <div class="term" id="term">
+    <div><span class="t-ts">00:00</span> <span class="t-sys">[SYS]</span> NEXUS Mobile prêt</div>
+    <div><span class="t-ts">00:00</span> <span class="t-ok">[OK]</span> Configure ta clé API (💶 en haut)</div>
+  </div>
+  <div class="stats" style="margin-top:18px;">
+    <div class="stat"><div class="stat-lbl">Projets</div><div class="stat-val" style="color:var(--cyan)" id="sProjets">0</div></div>
+    <div class="stat"><div class="stat-lbl">Tokens</div><div class="stat-val" style="color:var(--violet)" id="sTokens">0</div></div>
+    <div class="stat"><div class="stat-lbl">Coût</div><div class="stat-val" style="color:var(--amber)" id="sCout">0,00€</div></div>
+    <div class="stat"><div class="stat-lbl">Meilleur score</div><div class="stat-val" style="color:var(--green)" id="sBest">—</div></div>
+  </div>
+</div>
+
+<!-- ═══ NAVBAR BAS ═══ -->
+<div class="navbar">
+  <button class="nav-btn on" id="nav-generer" onclick="navTo('generer')">
+    <span class="nav-ic">🚀</span><span class="nav-lbl">Générer</span>
+  </button>
+  <button class="nav-btn" id="nav-projet" onclick="navTo('projet')">
+    <span class="nav-ic">💡</span><span class="nav-lbl">Projet</span>
+  </button>
+  <button class="nav-btn" id="nav-historique" onclick="navTo('historique')">
+    <span class="nav-ic">📌</span><span class="nav-lbl">Archive</span>
+  </button>
+  <button class="nav-btn" id="nav-vitrine" onclick="navTo('vitrine')">
+    <span class="nav-ic">🏷️</span><span class="nav-lbl">Vitrine</span>
+  </button>
+  <button class="nav-btn" id="nav-terminal" onclick="navTo('terminal')">
+    <span class="nav-ic">📊</span><span class="nav-lbl">Activité</span>
+  </button>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══ MODAL IMPORT ═══ -->
+<div class="modal-bg" id="modalImport">
+  <div class="modal">
+    <div class="modal-poignee"></div>
+    <div class="modal-t">📥 Importer une analyse</div>
+    <div class="modal-s">Colle ici le code JSON que Claude t'a donné dans le chat après « lance nexus ».</div>
+    <textarea class="inp" id="importZone" rows="6" placeholder='{"projet":{...}}' style="font-size:12px;line-height:1.4;"></textarea>
+    <button class="modal-save" onclick="importerProjet()">📥 Archiver ce projet</button>
+  </div>
+</div>
+
+<!-- ═══ MODAL MISE EN VENTE ═══ -->
+<div class="modal-bg" id="modalVente">
+  <div class="modal">
+    <div class="modal-poignee"></div>
+    <div class="modal-t">🏷️ Mettre en vitrine</div>
+    <div class="modal-s">Définis un prix et un statut pour ce projet.</div>
+    <label class="lbl">Prix de vente (€)</label>
+    <input class="inp" type="number" id="ventePrix" placeholder="2500">
+    <label class="lbl">Statut</label>
+    <select class="inp" id="venteStatut" style="font-family:'Inter';">
+      <option value="Disponible">🟢 Disponible</option>
+      <option value="En discussion">🟡 En discussion</option>
+      <option value="Vendu">🔴 Vendu</option>
+    </select>
+    <button class="modal-save" onclick="confirmerVente()">🏷️ Publier en vitrine</button>
+  </div>
+</div>
+
+<!-- ═══ MODAL CONFIG ═══ -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="modal-poignee"></div>
+    <div class="modal-t">⚙️ Configuration</div>
+    <div class="modal-s">Ta clé reste sur ton téléphone, jamais envoyée ailleurs.</div>
+    <label class="lbl">Clé API Anthropic</label>
+    <input class="inp" type="password" id="cfgCle" placeholder="sk-ant-...">
+    <div class="aide">🔑 Clé gratuite → <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys</div>
+    <div class="toggle-row">
+      <span>🌐 Recherche web (tendances réelles)</span>
+      <input type="checkbox" id="cfgWeb" style="width:20px;height:20px;accent-color:var(--violet);">
+    </div>
+    <div class="toggle-row">
+      <span>🔊 Son de fin</span>
+      <input type="checkbox" id="cfgSon" checked style="width:20px;height:20px;accent-color:var(--violet);">
+    </div>
+    <button class="modal-save" onclick="sauverConfig()">💾 Sauvegarder</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  MOT DE PASSE — change la valeur ci-dessous
+// ═══════════════════════════════════════════════════
+const MDP = 'Kokomeme273!';
+
+function checkMDP(){
+  const v=document.getElementById('loginInput').value;
+  if(v===MDP){
+    sessionStorage.setItem('nx_auth',Date.now());
+    document.getElementById('login').style.display='none';
+  }else{
+    document.getElementById('loginErr').style.display='block';
+    document.getElementById('loginInput').value='';
+    if(navigator.vibrate)navigator.vibrate(150);
+  }
+}
+(function(){
+  const a=sessionStorage.getItem('nx_auth');
+  if(a && Date.now()-parseInt(a)<86400000){
+    document.getElementById('login').style.display='none';
+  }
+})();
+
+// ═══ ÉTAT ═══
+const E={
+  secteurs:[], enCours:false,
+  versions:[], actuelle:null,
+  vitrine:[],
+  cout:0, tokens:0, best:0, bestNom:''
+};
+
+// ═══ STOCKAGE ═══
+function charger(){
+  try{
+    const v=localStorage.getItem('nxm_versions');
+    if(v){E.versions=JSON.parse(v);}
+    const vit=localStorage.getItem('nxm_vitrine');
+    if(vit){E.vitrine=JSON.parse(vit);}
+    E.cout=parseFloat(localStorage.getItem('nxm_cout')||'0');
+    E.tokens=parseInt(localStorage.getItem('nxm_tokens')||'0');
+    E.versions.forEach(v=>{if(v.score>E.best){E.best=v.score;E.bestNom=v.data.projet.nom;}});
+    rafraichirVersions();
+    rafraichirVitrine();
+    rafraichirStats();
+  }catch(e){}
+}
+function sauver(){
+  localStorage.setItem('nxm_versions',JSON.stringify(E.versions));
+  localStorage.setItem('nxm_vitrine',JSON.stringify(E.vitrine));
+  localStorage.setItem('nxm_cout',String(E.cout));
+  localStorage.setItem('nxm_tokens',String(E.tokens));
+}
+
+// ═══ NAVIGATION ═══
+function navTo(ec){
+  document.querySelectorAll('.ecran').forEach(e=>e.classList.remove('actif'));
+  document.getElementById('ec-'+ec).classList.add('actif');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('nav-'+ec).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+// ═══ CONFIG ═══
+function ouvrirConfig(){
+  document.getElementById('cfgCle').value=localStorage.getItem('nxm_cle')||'';
+  document.getElementById('cfgWeb').checked=localStorage.getItem('nxm_web')==='1';
+  document.getElementById('cfgSon').checked=localStorage.getItem('nxm_son')!=='0';
+  document.getElementById('modalBg').classList.add('on');
+}
+function sauverConfig(){
+  const c=document.getElementById('cfgCle').value.trim();
+  if(c && !c.startsWith('sk-ant-')){toast('Clé invalide (sk-ant-...)','err');return;}
+  localStorage.setItem('nxm_cle',c);
+  localStorage.setItem('nxm_web',document.getElementById('cfgWeb').checked?'1':'0');
+  localStorage.setItem('nxm_son',document.getElementById('cfgSon').checked?'1':'0');
+  document.getElementById('modalBg').classList.remove('on');
+  toast('Sauvegardé ✓','ok');
+}
+document.getElementById('modalBg').addEventListener('click',e=>{
+  if(e.target.id==='modalBg')document.getElementById('modalBg').classList.remove('on');
+});
+
+// ═══ INTERACTIONS ═══
+function toggleChip(el){
+  el.classList.toggle('on');
+  const s=el.textContent.trim();
+  if(E.secteurs.includes(s))E.secteurs=E.secteurs.filter(x=>x!==s);
+  else E.secteurs.push(s);
+}
+
+function log(type,msg){
+  const t=new Date();
+  const ts=`${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+  const cl={ok:'t-ok',info:'t-info',warn:'t-warn',err:'t-err',sys:'t-sys'}[type]||'t-info';
+  const lb={ok:'[OK]',info:'[INF]',warn:'[!]',err:'[ERR]',sys:'[SYS]'}[type]||'[INF]';
+  const d=document.createElement('div');
+  d.innerHTML=`<span class="t-ts">${ts}</span> <span class="${cl}">${lb}</span> ${msg}`;
+  document.getElementById('term').appendChild(d);
+  document.getElementById('term').scrollTop=99999;
+}
+
+function toast(m,t='ok'){
+  const e=document.getElementById('toast');
+  e.textContent=m;e.className=`toast ${t} show`;
+  setTimeout(()=>e.classList.remove('show'),2500);
+}
+
+// ═══ GÉNÉRATION ═══
+async function lancer(impose){
+  if(E.enCours)return;
+  const cle=localStorage.getItem('nxm_cle');
+  if(!cle){toast('Configure ta clé API d\'abord','err');ouvrirConfig();return;}
+
+  E.enCours=true;
+  const btn=document.getElementById('btnGo');
+  btn.disabled=true;btn.innerHTML='⚙️ Analyse en cours…';
+  navTo('terminal');
+
+  const secteur=impose?E.secteurs.join(', '):'';
+  const idee=document.getElementById('idee').value.trim();
+  const web=localStorage.getItem('nxm_web')==='1';
+
+  log('sys','━ Nouveau cycle ━');
+  if(secteur)log('info','Secteur : '+secteur);
+  else log('info','Sélection autonome du secteur…');
+  if(web)log('info','🌐 Recherche web active');
+  log('info','Analyse PESTEL · Porter · SWOT · BMC…');
+  log('info','Génération du code MVP…');
+
+  try{
+    const body={
+      model:"claude-sonnet-4-6",max_tokens:8000,
+      system:SYS,
+      messages:[{role:"user",content:prompt(secteur,idee)}]
+    };
+    if(web)body.tools=[{type:"web_search_20250305",name:"web_search",max_uses:3}];
+
+    const r=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","x-api-key":cle,
+        "anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify(body)
+    });
+    if(!r.ok){const er=await r.json();throw new Error(er.error?.message||('Erreur '+r.status));}
+    const data=await r.json();
+
+    if(data.usage){
+      const ti=data.usage.input_tokens||0,to=data.usage.output_tokens||0;
+      const eur=((ti/1e6*3)+(to/1e6*15))*0.92;
+      E.cout+=eur;E.tokens+=ti+to;
+      log('info',`${ti+to} tokens · ${eur.toFixed(3)}€`);
+    }
+
+    const raw=data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+    const R=parseJSON(raw);
+    if(!R)throw new Error('Réponse illisible');
+
+    log('ok',`Projet : ${R.projet.nom}`);
+    sauverVersion(R);
+    afficherProjet(R);
+    rafraichirStats();
+    jingle();
+    toast('Projet prêt ✓','ok');
+    navTo('projet');
+  }catch(err){
+    log('err',err.message);
+    if(err.message.includes('401'))toast('Clé API invalide','err');
+    else toast('Erreur : '+err.message,'err');
+  }
+
+  E.enCours=false;
+  btn.disabled=false;btn.innerHTML='🚀 Lancer NEXUS';
+}
+
+function parseJSON(raw){
+  if(!raw)return null;
+  let t=raw.replace(/```json/gi,'').replace(/```/g,'').trim();
+  try{return JSON.parse(t);}catch(e){}
+  const m=t.match(/\{[\s\S]*\}/);
+  if(m){
+    try{return JSON.parse(m[0]);}catch(e){}
+    let r=m[0].replace(/,\s*}/g,'}').replace(/,\s*]/g,']');
+    try{return JSON.parse(r);}catch(e){}
+  }
+  return null;
+}
+
+// ═══ PROMPTS ═══
+const SYS=`Tu es NEXUS, expert en création de projets innovants. Réponds UNIQUEMENT en JSON valide, sans backticks ni texte autour.
+Structure:
+{"projet":{"nom":"","secteur":"","tagline":"","description":"","probleme":"","solution":"","techs":["","",""],"cible":"","timeline":""},
+"scores":{"global":0,"faisabilite":0,"rentabilite":0,"originalite":0,"rgpd":0,"timing":0},
+"swot":{"forces":["",""],"faiblesses":["",""],"opportunites":["",""],"menaces":["",""]},
+"pestel":{"politique":"","economique":"","social":"","technologique":"","ecologique":"","legal":""},
+"rgpd":{"risque":"FAIBLE|MOYEN|ÉLEVÉ","mesures":["",""],"recommandation":""},
+"concurrence":[{"nom":"","force":"","faiblesse":""},{"nom":"","force":"","faiblesse":""}],
+"mvp":{"description":"","langage":"","code":"code réel échappé avec \\n","stack":["",""]},
+"financier":{"modele":"","prix":"","an1":"","an2":"","an3":"","seuil":"","roi":"","investissement":"montant investissement initial","cout_infra":"coût infra/mois","cout_marketing":"coût marketing/mois","cout_salaires":"coût salaires/mois","cout_outils":"coût outils/mois","cout_total":"total coûts/mois","hypotheses":["hypothèse 1","hypothèse 2"],"scenarios":{"pessimiste":"","realiste":"","optimiste":""}},
+"plan":[{"periode":"S1-2","action":""},{"periode":"S3-4","action":""},{"periode":"S5-8","action":""},{"periode":"S9-13","action":""}]}
+Le code MVP doit être réel et fonctionnel.`;
+
+function prompt(secteur,idee){
+  let p=secteur?`Projet dans : ${secteur}.`:`Choisis toi-même le secteur le plus porteur en 2026 (privilégie démographie/climat).`;
+  if(idee)p+=` Contrainte : "${idee}".`;
+  if(E.versions.length){
+    const vus=E.versions.slice(0,5).map(v=>v.data.projet.nom).join(', ');
+    p+=` Évite de répéter : ${vus}.`;
+  }
+  if(localStorage.getItem('nxm_web')==='1')p+=` Utilise la recherche web pour des tendances réelles et datées.`;
+  p+=` Exigences : réaliste 2026, différencié, RGPD strict (hébergement Europe), rentabilité chiffrée, code MVP réel, 3 scénarios financiers, plan 90j. Sois honnête sur les risques.`;
+  return p;
+}
+
+// ═══ AFFICHAGE PROJET ═══
+function afficherProjet(d){
+  document.getElementById('projetVide').style.display='none';
+  const p=d.projet,s=d.scores;
+  const couleurScore=v=>v>=75?'var(--green)':v>=55?'var(--amber)':'var(--red)';
+
+  const scoreBar=(nom,v,c)=>`<div class="score-item">
+    <div class="score-head"><span class="score-nom">${nom}</span><span class="score-val" style="color:${c}">${v}</span></div>
+    <div class="score-bar"><div class="score-fill" style="width:${v}%;background:${c}"></div></div></div>`;
+
+  let html=`
+  <div style="text-align:center;padding:8px 0 20px;">
+    <div style="font-family:'Space Grotesk';font-size:24px;font-weight:700;">${p.nom}</div>
+    <div style="font-size:14px;color:var(--muted);font-style:italic;margin-top:4px;">${p.tagline}</div>
+    <div class="tag" style="margin-top:10px;">📍 ${p.secteur}</div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:12px;text-align:center;">
+    <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Score global</div>
+    <div style="font-family:'Space Grotesk';font-size:42px;font-weight:700;color:${couleurScore(s.global)};">${s.global}<span style="font-size:18px;color:var(--muted);">/100</span></div>
+  </div>
+
+  <div class="carte ouvert">
+    <div class="carte-head" onclick="togglecarte(this)">
+      <div class="carte-ic">🧠</div>
+      <div class="carte-t"><div class="carte-nom">Scores détaillés</div><div class="carte-sous">5 dimensions évaluées</div></div>
+      <div class="carte-fleche">⌄</div>
+    </div>
+    <div class="carte-corps"><div class="carte-inner">
+      ${scoreBar('Faisabilité',s.faisabilite,'#9D5CFF')}
+      ${scoreBar('Rentabilité',s.rentabilite,'#34E89E')}
+      ${scoreBar('Originalité',s.originalite,'#FFC24B')}
+      ${scoreBar('RGPD',s.rgpd,'#2DD4FF')}
+      ${scoreBar('Timing marché',s.timing,'#FF5C7C')}
+    </div></div>
+  </div>
+
+  ${carte('💡','Le projet','Description complète',`
+    ${p.justification_secteur?`<div class="sous-titre">Pourquoi ce secteur</div><div>${p.justification_secteur}</div>`:''}
+    <div class="sous-titre">Description</div><div>${p.description}</div>
+    <div class="sous-titre">Problème résolu</div><div>${p.probleme}</div>
+    <div class="sous-titre">Solution unique</div><div>${p.solution}</div>
+    <div class="sous-titre">Technologies</div><div>${(p.techs||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    <div class="sous-titre">Cible</div><div>${p.cible}</div>
+    <div class="sous-titre">Timeline MVP</div><div style="color:var(--cyan)">${p.timeline}</div>
+  `)}
+
+  ${carte('📊','SWOT','Forces, faiblesses, opportunités, menaces',`
+    <div class="swot-bloc swot-f"><div class="swot-h">💪 Forces</div>${(d.swot.forces||[]).map(x=>`<div class="swot-li">${x}</div>`).join('')}</div>
+    <div class="swot-bloc swot-w"><div class="swot-h">😟 Faiblesses</div>${(d.swot.faiblesses||[]).map(x=>`<div class="swot-li">${x}</div>`).join('')}</div>
+    <div class="swot-bloc swot-o"><div class="swot-h">🚀 Opportunités</div>${(d.swot.opportunites||[]).map(x=>`<div class="swot-li">${x}</div>`).join('')}</div>
+    <div class="swot-bloc swot-t"><div class="swot-h">⚠️ Menaces</div>${(d.swot.menaces||[]).map(x=>`<div class="swot-li">${x}</div>`).join('')}</div>
+  `)}
+
+  ${carte('🌐','PESTEL','Analyse de l\'environnement',`
+    ${['politique','economique','social','technologique','ecologique','legal'].map(k=>
+      `<div class="sous-titre">${k}</div><div>${d.pestel[k]||'—'}</div>`).join('')}
+  `)}
+
+  ${carte('🥊','Concurrence','Acteurs en place',`
+    ${(d.concurrence||[]).map(c=>`<div style="padding:12px 0;border-bottom:1px solid var(--line);">
+      <div style="font-weight:600;font-size:14px;">${c.nom}</div>
+      <div style="font-size:13px;color:var(--green);margin-top:4px;">＋ ${c.force}</div>
+      <div style="font-size:13px;color:var(--red);margin-top:2px;">－ ${c.faiblesse}</div>
+    </div>`).join('')}
+  `)}
+
+  ${carte('🔒','RGPD','Conformité européenne',`
+    <div style="display:inline-block;padding:6px 14px;border-radius:20px;font-weight:600;font-size:13px;
+      background:${d.rgpd.risque==='FAIBLE'?'rgba(52,232,158,0.15)':d.rgpd.risque==='MOYEN'?'rgba(255,194,75,0.15)':'rgba(255,92,124,0.15)'};
+      color:${d.rgpd.risque==='FAIBLE'?'var(--green)':d.rgpd.risque==='MOYEN'?'var(--amber)':'var(--red)'};">
+      Risque ${d.rgpd.risque}</div>
+    <div class="sous-titre">Mesures requises</div>
+    ${(d.rgpd.mesures||[]).map(m=>`<div class="liste-item">🛡️ ${m}</div>`).join('')}
+    <div class="sous-titre">Recommandation</div><div>${d.rgpd.recommandation}</div>
+  `)}
+
+  ${carte('💻','Code MVP','Le cœur technique',`
+    <div>${d.mvp.description}</div>
+    <div class="code-box">
+      <div class="code-head"><span class="code-lang">${d.mvp.langage}</span>
+        <span class="code-copy" onclick="copierCode(this)">📋 Copier</span></div>
+      <div class="code-body">${escapeHtml(d.mvp.code)}</div>
+    </div>
+    <div style="margin-top:10px;">${(d.mvp.stack||[]).map(s=>`<span class="tag">${s}</span>`).join('')}</div>
+  `)}
+
+  ${carte('💶','Financier','Revenus, coûts & scénarios',`
+    <div class="sous-titre">Revenus</div>
+    <div class="fin-row"><span class="fin-lbl">Modèle</span><span class="fin-val">${d.financier.modele}</span></div>
+    <div class="fin-row"><span class="fin-lbl">Prix moyen</span><span class="fin-val" style="color:var(--cyan)">${d.financier.prix}</span></div>
+    <div class="fin-row"><span class="fin-lbl">Revenus An 1</span><span class="fin-val">${d.financier.an1}</span></div>
+    <div class="fin-row"><span class="fin-lbl">Revenus An 2</span><span class="fin-val">${d.financier.an2}</span></div>
+    <div class="fin-row"><span class="fin-lbl">Revenus An 3</span><span class="fin-val" style="color:var(--green)">${d.financier.an3}</span></div>
+
+    <div class="sous-titre">Coûts</div>
+    ${d.financier.investissement?`<div class="fin-row"><span class="fin-lbl">💰 Investissement initial</span><span class="fin-val" style="color:var(--red)">${d.financier.investissement}</span></div>`:''}
+    ${d.financier.cout_infra?`<div class="fin-row"><span class="fin-lbl">🖥 Infra / mois</span><span class="fin-val" style="color:var(--red)">${d.financier.cout_infra}</span></div>`:''}
+    ${d.financier.cout_marketing?`<div class="fin-row"><span class="fin-lbl">📣 Marketing / mois</span><span class="fin-val" style="color:var(--red)">${d.financier.cout_marketing}</span></div>`:''}
+    ${d.financier.cout_salaires?`<div class="fin-row"><span class="fin-lbl">👥 Salaires / mois</span><span class="fin-val" style="color:var(--red)">${d.financier.cout_salaires}</span></div>`:''}
+    ${d.financier.cout_outils?`<div class="fin-row"><span class="fin-lbl">🔧 Outils / mois</span><span class="fin-val" style="color:var(--red)">${d.financier.cout_outils}</span></div>`:''}
+    ${d.financier.cout_total?`<div class="fin-row" style="border-top:1px solid var(--line);padding-top:10px;margin-top:4px;"><span class="fin-lbl" style="font-weight:600;">Total coûts / mois</span><span class="fin-val" style="color:var(--red);font-weight:600;">${d.financier.cout_total}</span></div>`:''}
+    ${(d.financier.couts_postes||[]).length?`
+      ${d.financier.couts_postes.map(c=>`<div class="fin-row"><span class="fin-lbl">${c.poste}</span><span class="fin-val" style="color:var(--red)">${c.montant_mensuel}</span></div>`).join('')}
+      <div class="fin-row" style="border-top:1px solid var(--line);padding-top:10px;margin-top:4px;">
+        <span class="fin-lbl" style="font-weight:600;">Total coûts / mois</span>
+        <span class="fin-val" style="color:var(--red);font-weight:600;">${d.financier.cout_infra_mensuel||'voir détail'}</span>
+      </div>
+    `:''}
+
+    <div class="sous-titre">Rentabilité</div>
+    <div class="fin-row"><span class="fin-lbl">⏱ Seuil rentabilité</span><span class="fin-val" style="color:var(--amber)">${d.financier.seuil}</span></div>
+    <div class="fin-row"><span class="fin-lbl">📈 ROI 3 ans</span><span class="fin-val" style="color:var(--green)">${d.financier.roi}</span></div>
+
+    <div class="sous-titre">Scénarios (An 3)</div>
+    <div class="scenario swot-w"><b style="color:var(--red)">😟 Pessimiste</b><br>${d.financier.scenarios.pessimiste}</div>
+    <div class="scenario swot-o"><b style="color:var(--cyan)">😐 Réaliste</b><br>${d.financier.scenarios.realiste}</div>
+    <div class="scenario swot-f"><b style="color:var(--green)">😀 Optimiste</b><br>${d.financier.scenarios.optimiste}</div>
+
+    ${d.financier.hypotheses?`<div class="sous-titre">Hypothèses de calcul</div>
+    <div style="padding:12px;background:rgba(255,187,58,0.06);border:1px solid rgba(255,187,58,0.15);border-radius:12px;">
+      <div style="font-size:11px;color:var(--amber);margin-bottom:8px;">⚠️ Ces chiffres reposent sur les hypothèses suivantes</div>
+      ${(d.financier.hypotheses||[]).map(h=>`<div style="font-size:12px;color:#C5BFD8;padding:4px 0 4px 12px;position:relative;"><span style="position:absolute;left:0;opacity:.5;">▸</span>${h}</div>`).join('')}
+    </div>`:''}
+  `)}
+
+  ${carte('🗓','Plan 90 jours','Feuille de route',`
+    ${(d.plan||[]).map((e,i)=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);">
+      <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--violet-d),var(--cyan));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">${i+1}</div>
+      <div><div style="font-size:12px;color:var(--cyan);font-family:'JetBrains Mono';">${e.periode}</div><div style="font-size:13px;margin-top:2px;">${e.action}</div></div>
+    </div>`).join('')}
+  `)}
+
+  <button class="btn-go" style="margin-top:16px;background:var(--surface);border:1px solid var(--green);box-shadow:none;color:var(--green);" onclick="mettreEnVente()">🏷️ Mettre en vitrine</button>
+
+  <div style="text-align:center;font-size:11px;color:var(--dim);padding:16px 0 8px;line-height:1.6;">
+    Analyse générée par IA · estimations à valider<br>avant tout engagement réel
+  </div>
+  `;
+  document.getElementById('projetContenu').innerHTML=html;
+}
+
+function carte(ic,nom,sous,contenu){
+  return `<div class="carte">
+    <div class="carte-head" onclick="togglecarte(this)">
+      <div class="carte-ic">${ic}</div>
+      <div class="carte-t"><div class="carte-nom">${nom}</div><div class="carte-sous">${sous}</div></div>
+      <div class="carte-fleche">⌄</div>
+    </div>
+    <div class="carte-corps"><div class="carte-inner">${contenu}</div></div>
+  </div>`;
+}
+function togglecarte(el){el.parentElement.classList.toggle('ouvert');}
+function escapeHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function copierCode(el){
+  const code=el.closest('.code-box').querySelector('.code-body').textContent;
+  navigator.clipboard.writeText(code).then(()=>{el.textContent='✓ Copié';setTimeout(()=>el.textContent='📋 Copier',1500);});
+}
+
+// ═══ VERSIONS ═══
+function sauverVersion(d){
+  const t=new Date();
+  const date=t.toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const id='v'+String(E.versions.length+1).padStart(3,'0');
+  const v={id,date,data:d,score:d.scores.global};
+  E.versions.unshift(v);E.actuelle=v;
+  if(d.scores.global>E.best){E.best=d.scores.global;E.bestNom=d.projet.nom;}
+  sauver();rafraichirVersions();
+}
+function rafraichirVersions(){
+  const l=document.getElementById('listeVersions');
+  if(!E.versions.length)return;
+  l.innerHTML=E.versions.map((v,i)=>{
+    const c=v.score>=75?'var(--green)':v.score>=55?'var(--amber)':'var(--red)';
+    return `<div class="version" onclick="chargerVersion(${i})">
+      <div class="v-score" style="background:${c}22;color:${c};">${v.score}</div>
+      <div class="v-info"><div class="v-nom">${v.data.projet.nom}</div><div class="v-date">${v.id} · ${v.date}</div></div>
+      <div style="color:var(--muted);">›</div>
+    </div>`;
+  }).join('');
+}
+function chargerVersion(i){
+  E.actuelle=E.versions[i];
+  afficherProjet(E.actuelle.data);
+  navTo('projet');
+}
+
+function rafraichirStats(){
+  document.getElementById('sProjets').textContent=E.versions.length;
+  document.getElementById('sTokens').textContent=E.tokens>=1000?(E.tokens/1000).toFixed(1)+'k':E.tokens;
+  document.getElementById('sCout').textContent=E.cout.toFixed(2).replace('.',',')+'€';
+  document.getElementById('sBest').textContent=E.best||'—';
+  document.getElementById('coutBadge').textContent='💶 '+E.cout.toFixed(2).replace('.',',')+' €';
+}
+
+// ═══ IMPORT DEPUIS LE CHAT ═══
+function ouvrirImport(){
+  document.getElementById('importZone').value='';
+  document.getElementById('modalImport').classList.add('on');
+}
+function importerProjet(){
+  const txt=document.getElementById('importZone').value.trim();
+  if(!txt){toast('Colle d\'abord le code du projet','err');return;}
+  const R=parseJSON(txt);
+  if(!R||!R.projet||!R.scores){toast('Format non reconnu','err');return;}
+  sauverVersion(R);
+  afficherProjet(R);
+  rafraichirStats();
+  document.getElementById('modalImport').classList.remove('on');
+  toast('Projet archivé ✓','ok');
+  jingle();
+  navTo('projet');
+}
+document.getElementById('modalImport').addEventListener('click',e=>{
+  if(e.target.id==='modalImport')document.getElementById('modalImport').classList.remove('on');
+});
+
+// ═══ VITRINE / VENTE ═══
+let venteCible=null;
+function mettreEnVente(){
+  if(!E.actuelle){toast('Ouvre d\'abord un projet','err');return;}
+  venteCible=E.actuelle;
+  document.getElementById('ventePrix').value='';
+  document.getElementById('venteStatut').value='Disponible';
+  document.getElementById('modalVente').classList.add('on');
+}
+function confirmerVente(){
+  const prix=parseInt(document.getElementById('ventePrix').value)||0;
+  const statut=document.getElementById('venteStatut').value;
+  if(!venteCible)return;
+  // éviter les doublons
+  const existe=E.vitrine.findIndex(v=>v.data.projet.nom===venteCible.data.projet.nom);
+  const item={data:venteCible.data,score:venteCible.score,prix,statut,date:venteCible.date};
+  if(existe>=0)E.vitrine[existe]=item;
+  else E.vitrine.unshift(item);
+  sauver();rafraichirVitrine();
+  document.getElementById('modalVente').classList.remove('on');
+  toast('Publié en vitrine ✓','ok');
+  navTo('vitrine');
+}
+document.getElementById('modalVente').addEventListener('click',e=>{
+  if(e.target.id==='modalVente')document.getElementById('modalVente').classList.remove('on');
+});
+
+function retirerVitrine(i){
+  E.vitrine.splice(i,1);sauver();rafraichirVitrine();toast('Retiré de la vitrine','ok');
+}
+
+function rafraichirVitrine(){
+  const l=document.getElementById('listeVitrine');
+  document.getElementById('vitProjets').textContent=E.vitrine.length;
+  const total=E.vitrine.filter(v=>v.statut!=='Vendu').reduce((s,v)=>s+(v.prix||0),0);
+  document.getElementById('vitValeur').textContent=total.toLocaleString('fr-FR')+' €';
+  if(!E.vitrine.length){
+    l.innerHTML='<div class="vide"><div class="vide-ic">🏷️</div><div class="vide-t">Vitrine vide</div><div class="vide-d">Depuis un projet, tape « Mettre en vitrine » pour le proposer à la vente ici.</div></div>';
+    return;
+  }
+  const coul={'Disponible':'var(--green)','En discussion':'var(--amber)','Vendu':'var(--red)'};
+  const ic={'Disponible':'🟢','En discussion':'🟡','Vendu':'🔴'};
+  l.innerHTML=E.vitrine.map((v,i)=>`
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:'Space Grotesk';font-size:16px;font-weight:600;">${v.data.projet.nom}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${v.data.projet.secteur}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="font-family:'Space Grotesk';font-size:20px;font-weight:700;color:var(--green);">${v.prix?v.prix.toLocaleString('fr-FR')+' €':'—'}</div>
+          <div style="font-size:11px;color:${coul[v.statut]};margin-top:2px;">${ic[v.statut]} ${v.statut}</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:#C5BFD8;margin-top:10px;line-height:1.5;">${v.data.projet.tagline}</div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <div style="flex:1;text-align:center;padding:8px;background:var(--surface2);border-radius:10px;font-size:12px;">Score ${v.score}/100</div>
+        <button onclick="chargerVitrine(${i})" style="flex:1;padding:8px;background:var(--surface2);border:none;border-radius:10px;color:var(--cyan);font-size:12px;cursor:pointer;">Voir détail</button>
+        <button onclick="retirerVitrine(${i})" style="padding:8px 12px;background:var(--surface2);border:none;border-radius:10px;color:var(--red);font-size:12px;cursor:pointer;">✕</button>
+      </div>
+    </div>`).join('');
+}
+function chargerVitrine(i){
+  E.actuelle={data:E.vitrine[i].data,score:E.vitrine[i].score,date:E.vitrine[i].date};
+  afficherProjet(E.vitrine[i].data);
+  navTo('projet');
+}
+
+// ═══ JINGLE ═══
+function jingle(){
+  if(localStorage.getItem('nxm_son')==='0')return;
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    [523,659,784,1046].forEach((f,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.value=f;o.connect(g);g.connect(ctx.destination);
+      const t=ctx.currentTime+i*0.13;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.2,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+      o.start(t);o.stop(t+0.35);
+    });
+  }catch(e){}
+}
+
+// ═══ DÉMARRAGE ═══
+charger();
+if(!localStorage.getItem('nxm_cle')){
+  setTimeout(()=>{if(document.getElementById('login').style.display==='none')log('warn','Configure ta clé API (💶 en haut)');},1000);
+}
+</script>
+</body>
+</html>
